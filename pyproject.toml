@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "dumpyara"
+version = "1.0.0"
+description = "Dumpyara"
+license = "GPL-3.0"
+readme = "README.md"
+repository = "https://github.com/SebaUbuntu/TWRP-device-tree-generator"
+authors = ["Sebastiano Barezzi <barezzisebastiano@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Brotli = "^1.0.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.1"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
