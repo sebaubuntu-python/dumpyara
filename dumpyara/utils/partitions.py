@@ -6,43 +6,51 @@
 
 from dumpyara.lib.liblogging import LOGE, LOGI
 from dumpyara.lib.libsevenz import sevenz
+from dumpyara.utils.bootimg import extract_bootimg
 from dumpyara.utils.raw_image import get_raw_image
 from pathlib import Path
 from shutil import copyfile
 from subprocess import CalledProcessError
 
-# partition: is_raw
+(
+	FILESYSTEM,
+	BOOTIMAGE,
+	RAW,
+) = range(3)
+
+# partition: type
 PARTITIONS = {
-	"boot": True,
-	"dtbo": True,
-	"cust": False,
-	"factory": False,
-	"india": True,
-	"my_preload": True,
-	"my_odm": True,
-	"my_stock": True,
-	"my_operator": True,
-	"my_country": True,
-	"my_product": True,
-	"my_company": True,
-	"my_engineering": True,
-	"my_heytap": True,
-	"odm": False,
-	"oem": False,
-	"oppo_product": False,
-	"opproduct": True,
-	"preload_common": False,
-	"product": False,
-	"recovery": True,
-	"reserve": True,
-	"system": False,
-	"system_ext": False,
-	"system_other": False,
-	"systemex": False,
-	"vendor": False,
-	"xrom": False,
-	"modem": True,
-	"tz": True,
+	"boot": BOOTIMAGE,
+	"dtbo": RAW,
+	"cust": FILESYSTEM,
+	"exaid": BOOTIMAGE,
+	"factory": FILESYSTEM,
+	"india": RAW,
+	"my_preload": RAW,
+	"my_odm": RAW,
+	"my_stock": RAW,
+	"my_operator": RAW,
+	"my_country": RAW,
+	"my_product": RAW,
+	"my_company": RAW,
+	"my_engineering": RAW,
+	"my_heytap": RAW,
+	"odm": FILESYSTEM,
+	"oem": FILESYSTEM,
+	"oppo_product": FILESYSTEM,
+	"opproduct": RAW,
+	"preload_common": FILESYSTEM,
+	"product": FILESYSTEM,
+	"recovery": BOOTIMAGE,
+	"reserve": RAW,
+	"system": FILESYSTEM,
+	"system_ext": FILESYSTEM,
+	"system_other": FILESYSTEM,
+	"systemex": FILESYSTEM,
+	"vendor": FILESYSTEM,
+	"xrom": FILESYSTEM,
+	"modem": RAW,
+	"tz": RAW,
 }
 
 # alternative name: generic name
@@ -89,9 +97,7 @@ def extract_partition(file: Path, output_path: Path):
 
 	new_partition_name = ALTERNATIVE_PARTITION_NAMES.get(partition_name, partition_name)
 
-	if PARTITIONS[new_partition_name]:
-		copyfile(file, output_path / f"{new_partition_name}.img", follow_symlinks=True)
-	else:
+	if PARTITIONS[new_partition_name] == FILESYSTEM:
 		# Make sure we have a raw image
 		raw_image = get_raw_image(partition_name, file.parent)
 
@@ -102,3 +108,7 @@ def extract_partition(file: Path, output_path: Path):
 			LOGE(f"Error extracting {file.stem}")
 			LOGE(f"{e.output}")
 			raise e
+	elif PARTITIONS[new_partition_name] == RAW:
+		copyfile(file, output_path / f"{new_partition_name}.img", follow_symlinks=True)
+	elif PARTITIONS[new_partition_name] == BOOTIMAGE:
+		extract_bootimg(file, output_path / new_partition_name)

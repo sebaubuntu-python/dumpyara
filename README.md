@@ -36,7 +36,9 @@ optional arguments:
 - Brotli compressed images
 - sdat images
 - Sparsed images
+- Boot images
 
 ## Credits
+- AIK: osm0sis
 - lpunpack: unix3dgforce
 - sdat2img: xpirt
