@@ -63,6 +63,16 @@ ALTERNATIVE_PARTITION_NAMES = {
 	"NON-HLOS": "modem",
 }
 
+# A/B partition, hoping _a is the right one...
+ALTERNATIVE_PARTITION_NAMES.update({
+	f"{alias}_a": partition
+	for alias, partition in ALTERNATIVE_PARTITION_NAMES.items()
+})
+ALTERNATIVE_PARTITION_NAMES.update({
+	f"{partition}_a": partition
+	for partition in PARTITIONS
+})
+
 def get_partition_name(file: Path):
 	for partition in list(PARTITIONS) + list(ALTERNATIVE_PARTITION_NAMES):
 		possible_names = [
