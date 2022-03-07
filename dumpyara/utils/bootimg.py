@@ -17,20 +17,16 @@ def extract_bootimg(file: Path, output_path: Path):
 	(output_path / "info.txt").write_text(str(image_info))
 
 	if image_info.kernel:
-		with image_info.kernel.open('rb') as f:
-			(output_path / "kernel").write_bytes(f.read())
+		(output_path / "kernel").write_bytes(image_info.kernel.read_bytes())
 
 	if image_info.dt_image:
-		with image_info.dt_image.open('rb') as f:
-			(output_path / "dt.img").write_bytes(f.read())
+		(output_path / "dt.img").write_bytes(image_info.dt_image.read_bytes())
 
 	if image_info.dtb_image:
-		with image_info.dtb_image.open('rb') as f:
-			(output_path / "dtb.img").write_bytes(f.read())
+		(output_path / "dtb.img").write_bytes(image_info.dtb_image.read_bytes())
 
 	if image_info.dtbo_image:
-		with image_info.dtbo_image.open('rb') as f:
-			(output_path / "dtbo.img").write_bytes(f.read())
+		(output_path / "dtbo.img").write_bytes(image_info.dtbo_image.read_bytes())
 
 	if image_info.ramdisk:
 		copy_tree(str(image_info.ramdisk), str(output_path / "ramdisk"), preserve_symlinks=True)
