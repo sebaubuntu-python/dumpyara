@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.lib.liblogging import LOGD, LOGI
+from dumpyara.lib.liblogging import LOGI
 from dumpyara.lib.liblpunpack import LpUnpack
 from dumpyara.utils.partitions import can_be_partition, extract_partition
 import fnmatch
