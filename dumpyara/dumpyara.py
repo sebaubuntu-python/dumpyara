@@ -50,15 +50,15 @@ class Dumpyara:
 
 		# Process all files
 		for file in self.fileslist:
-			absolute_file_path = self.tempdir_path / file
+			relative_file_path = file.relative_to(self.tempdir_path)
 			# Might have been deleted by previous step
-			if not absolute_file_path.is_file():
+			if not file.is_file():
 				continue
 
-			if can_be_partition(absolute_file_path):
-				extract_partition(absolute_file_path, self.path)
+			if can_be_partition(file):
+				extract_partition(file, self.path)
 			else:
-				LOGI(f"Skipping {file}")
+				LOGI(f"Skipping {relative_file_path}")
 
 		# We don't need artifacts anymore
 		self.tempdir.cleanup()
