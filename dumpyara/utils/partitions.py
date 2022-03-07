@@ -108,7 +108,8 @@ def extract_partition(file: Path, output_path: Path):
 			LOGE(f"Error extracting {file.stem}")
 			LOGE(f"{e.output}")
 			raise e
-	elif PARTITIONS[new_partition_name] == RAW:
-		copyfile(file, output_path / f"{new_partition_name}.img", follow_symlinks=True)
 	elif PARTITIONS[new_partition_name] == BOOTIMAGE:
 		extract_bootimg(file, output_path / new_partition_name)
+
+	if PARTITIONS[new_partition_name] in (RAW, BOOTIMAGE):
+		copyfile(file, output_path / f"{new_partition_name}.img", follow_symlinks=True)
