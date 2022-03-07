@@ -24,9 +24,7 @@ def get_raw_image(partition: str, path: Path):
 
 	if brotli_image.is_file():
 		LOGI(f"Decompressing {brotli_image}")
-		with brotli_image.open("rb") as f:
-			with dat_image.open("wb") as g:
-				g.write(brotli.decompress(f.read()))
+		dat_image.write_bytes(brotli.decompress(brotli_image.read_bytes()))
 		brotli_image.unlink()
 
 	if dat_image.is_file() and transfer_list.is_file():
