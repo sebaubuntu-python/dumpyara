@@ -38,7 +38,6 @@ class Dumpyara:
 		LOGI("Extracting package...")
 		unpack_archive(self.file, self.tempdir_path)
 		self.update_tempdir_files_list()
-		LOGD(f"All files in package: {', '.join(self.fileslist)}")
 
 		# Extract super first if it exists
 		# It contains all the partitions that we are interested in
