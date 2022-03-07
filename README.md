@@ -1,5 +1,7 @@
 # Dumpyara
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/7b17f96d027e408ba3637d6215806e95)](https://www.codacy.com/gh/SebaUbuntu/dumpyara/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=SebaUbuntu/dumpyara&amp;utm_campaign=Badge_Grade)
+
 ## Installation
 
 ```
