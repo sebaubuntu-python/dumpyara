@@ -35,4 +35,6 @@ def extract_bootimg(file: Path, output_path: Path):
 	if image_info.ramdisk:
 		copy_tree(str(image_info.ramdisk), str(output_path / "ramdisk"))
 
+	aik_manager.cleanup()
+
 	return output_path
