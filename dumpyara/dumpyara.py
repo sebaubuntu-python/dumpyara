@@ -49,13 +49,14 @@ class Dumpyara:
 			self.update_tempdir_files_list()
 
 		# Process all files
-		for file in [self.tempdir_path / file for file in self.fileslist]:
+		for file in self.fileslist:
+			absolute_file_path = self.tempdir_path / file
 			# Might have been deleted by previous step
-			if not file.is_file():
+			if not absolute_file_path.is_file():
 				continue
 
-			if can_be_partition(file):
-				extract_partition(file, self.path)
+			if can_be_partition(absolute_file_path):
+				extract_partition(absolute_file_path, self.path)
 			else:
 				LOGI(f"Skipping {file}")
 
