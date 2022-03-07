@@ -41,7 +41,7 @@ class Dumpyara:
 
 		# Extract super first if it exists
 		# It contains all the partitions that we are interested in
-		super_match = fnmatch.filter(self.fileslist, "*super.img*")
+		super_match = fnmatch.filter([str(file) for file in self.fileslist], "*super.img*")
 		if super_match:
 			LOGI("Super partition detected, first extracting it")
 			LpUnpack(SUPER_IMAGE=self.tempdir_path / super_match[0], OUTPUT_DIR=self.tempdir_path).unpack()
@@ -65,7 +65,7 @@ class Dumpyara:
 		# Create all_files.txt
 		LOGI("Creating all_files.txt")
 		with open(self.path / "all_files.txt", "w") as f:
-			f.write("\n".join(self.get_recursive_files_list(self.path, relative=True)))
+			f.write("\n".join([str(file) for file in self.get_recursive_files_list(self.path, relative=True)]))
 
 	@staticmethod
 	def get_recursive_files_list(path: Path, relative=False):
@@ -76,7 +76,7 @@ class Dumpyara:
 				file_path = Path(currentpath) / file
 				if relative:
 					file_path = file_path.relative_to(path)
-				files_list.append(str(file_path))
+				files_list.append(file_path)
 
 		return files_list
 
