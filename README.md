@@ -38,9 +38,11 @@ optional arguments:
 - Brotli compressed images
 - sdat images
 - Sparsed images
+- payload.bin
 - Boot images
 
 ## Credits
 - AIK: osm0sis
+- [extract_android_ota_payload](https://github.com/erfanoabdi/extract_android_ota_payload): cyxx and erfanoabdi
 - lpunpack: unix3dgforce
 - sdat2img: xpirt

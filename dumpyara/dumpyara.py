@@ -6,6 +6,7 @@
 
 from dumpyara.lib.liblogging import LOGI
 from dumpyara.lib.liblpunpack import LpUnpack
+from dumpyara.lib.libpayload import extract_android_ota_payload
 from dumpyara.utils.partitions import can_be_partition, extract_partition
 import fnmatch
 from os import walk
@@ -38,6 +39,14 @@ class Dumpyara:
 		LOGI("Extracting package...")
 		unpack_archive(self.file, self.tempdir_path)
 		self.update_tempdir_files_list()
+
+		# Extract payload.bin if it exists
+		# It contains all the partitions that we are interested in
+		payload_match = fnmatch.filter([str(file) for file in self.fileslist], "*payload.bin*")
+		if payload_match:
+			LOGI("Payload partition detected, first extracting it")
+			extract_android_ota_payload(self.tempdir_path / payload_match[0], self.tempdir_path)
+			self.update_tempdir_files_list()
 
 		# Extract super first if it exists
 		# It contains all the partitions that we are interested in

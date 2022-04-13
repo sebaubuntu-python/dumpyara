@@ -10,6 +10,7 @@ authors = ["Sebastiano Barezzi <barezzisebastiano@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 Brotli = "^1.0.9"
+protobuf = "^3.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.1"
