@@ -30,15 +30,19 @@ optional arguments:
 
 ## Supported formats
 
-### Archives
+### Step 1 - Archives
 - All the ones supported by shutil's extract_archive
 
-### Images
-- Raw images
-- Brotli compressed images
-- sdat images
-- Sparsed images
+### Step 2 - What's inside the archive
+- A-only OTAs (Brotli and/or sdat compressed)
+- A/B OTAs
+- Dynamic partitions (super.img)
 - payload.bin
+- Raw images (e.g. Xiaomi fastboot packages)
+
+### Step 3 - Partition images
+- Raw images
+- Sparsed images
 - Boot images
 
 ## Credits
