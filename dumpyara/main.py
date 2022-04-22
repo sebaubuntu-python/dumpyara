@@ -8,11 +8,12 @@ from argparse import ArgumentParser
 from dumpyara import __version__ as version, current_path
 from dumpyara.dumpyara import Dumpyara
 from dumpyara.utils.logging import setup_logging
+from dumpyara.utils.reorder import setup_locale
 from pathlib import Path
 
 def main():
 	print(f"Dumpyara\n"
-		  f"Version {version}\n")
+	      f"Version {version}\n")
 
 	parser = ArgumentParser(prog='python3 -m dumpyara')
 
@@ -27,6 +28,8 @@ def main():
 						help="enable debugging logging")
 
 	args = parser.parse_args()
+
+	setup_locale()
 
 	setup_logging(args.verbose)
 
