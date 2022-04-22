@@ -6,13 +6,18 @@
 
 from distutils.dir_util import copy_tree
 from dumpyara.lib.libaik import AIKManager
+from dumpyara.lib.liblogging import LOGW
 from pathlib import Path
 
 def extract_bootimg(file: Path, output_path: Path):
-	output_path.mkdir(parents=True)
-
 	aik_manager = AIKManager()
-	image_info = aik_manager.extract(file)
+	try:
+		image_info = aik_manager.extract(file)
+	except:
+		LOGW(f"Failed to extract {file.name}, invalid boot image")
+		return None
+
+	output_path.mkdir(parents=True)
 
 	(output_path / "info.txt").write_text(str(image_info))
 
