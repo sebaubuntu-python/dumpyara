@@ -5,12 +5,9 @@
 #
 
 from functools import cmp_to_key
-from locale import LC_ALL, setlocale, strcoll
+from locale import strcoll
 from pathlib import Path
 from typing import Union
-
-def setup_locale():
-	setlocale(LC_ALL, "C")
 
 def strcoll_files(string1: Union[str, Path], string2: Union[str, Path]) -> int:
 	"""Reorder a file list by dir first, then name."""

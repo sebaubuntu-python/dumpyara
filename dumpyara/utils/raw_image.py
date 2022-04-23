@@ -5,10 +5,10 @@
 #
 
 import brotli
-from dumpyara.lib.liblogging import LOGI
 from dumpyara.lib.liblpunpack import SparseImage
 from dumpyara.lib.libsdat2img import main as sdat2img
 from pathlib import Path
+from sebaubuntu_libs.liblogging import LOGI
 from shutil import move
 
 def get_raw_image(partition: str, path: Path):

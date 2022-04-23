@@ -4,11 +4,11 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.lib.liblogging import LOGE, LOGI
 from dumpyara.lib.libsevenz import sevenz
 from dumpyara.utils.bootimg import extract_bootimg
 from dumpyara.utils.raw_image import get_raw_image
 from pathlib import Path
+from sebaubuntu_libs.liblogging import LOGE, LOGI
 from shutil import copyfile
 from subprocess import CalledProcessError
 

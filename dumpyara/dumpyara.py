@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.lib.liblogging import LOGI
 from dumpyara.lib.liblpunpack import LpUnpack
 from dumpyara.lib.libpayload import extract_android_ota_payload
 from dumpyara.utils.partitions import can_be_partition, extract_partition
@@ -12,6 +11,7 @@ from dumpyara.utils.reorder import strcoll_files_key
 import fnmatch
 from os import walk
 from pathlib import Path
+from sebaubuntu_libs.liblogging import LOGI
 from shutil import unpack_archive
 from tempfile import TemporaryDirectory
 

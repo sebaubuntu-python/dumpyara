@@ -5,9 +5,9 @@
 #
 
 from distutils.dir_util import copy_tree
-from dumpyara.lib.libaik import AIKManager
-from dumpyara.lib.liblogging import LOGW
 from pathlib import Path
+from sebaubuntu_libs.libaik import AIKManager
+from sebaubuntu_libs.liblogging import LOGW
 
 def extract_bootimg(file: Path, output_path: Path):
 	aik_manager = AIKManager()

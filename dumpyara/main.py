@@ -8,8 +8,8 @@ from argparse import ArgumentParser
 from dumpyara import __version__ as version, current_path
 from dumpyara.dumpyara import Dumpyara
 from dumpyara.utils.logging import setup_logging
-from dumpyara.utils.reorder import setup_locale
 from pathlib import Path
+from sebaubuntu_libs.liblocale import setup_locale
 
 def main():
 	print(f"Dumpyara\n"
