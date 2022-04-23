@@ -7,7 +7,7 @@
 ```
 pip3 install dumpyara
 ```
-The module is supported on Python 3.8 and above.
+The module is supported on Python 3.9 and above.
 
 ## How to use
 
