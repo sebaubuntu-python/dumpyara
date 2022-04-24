@@ -13,7 +13,7 @@ def extract_bootimg(file: Path, output_path: Path):
 	aik_manager = AIKManager()
 	try:
 		image_info = aik_manager.extract(file)
-	except:
+	except Exception:
 		LOGW(f"Failed to extract {file.name}, invalid boot image")
 		return None
 
