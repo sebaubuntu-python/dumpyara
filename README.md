@@ -4,14 +4,14 @@
 
 ## Installation
 
-```
+```sh
 pip3 install dumpyara
 ```
 The module is supported on Python 3.9 and above.
 
 ## How to use
 
-```
+```sh
 $ python3 -m dumpyara -h
 Dumpyara
 Version 1.0.0
@@ -31,22 +31,22 @@ optional arguments:
 ## Supported formats
 
 ### Step 1 - Archives
-- All the ones supported by shutil's extract_archive
+-   All the ones supported by shutil's extract_archive
 
 ### Step 2 - What's inside the archive
-- A-only OTAs (Brotli and/or sdat compressed)
-- A/B OTAs
-- Dynamic partitions (super.img)
-- payload.bin
-- Raw images (e.g. Xiaomi fastboot packages)
+-   A-only OTAs (Brotli and/or sdat compressed)
+-   A/B OTAs
+-   Dynamic partitions (super.img)
+-   payload.bin
+-   Raw images (e.g. Xiaomi fastboot packages)
 
 ### Step 3 - Partition images
-- Raw images
-- Sparsed images
-- Boot images
+-   Raw images
+-   Sparsed images
+-   Boot images
 
 ## Credits
-- AIK: osm0sis
-- [extract_android_ota_payload](https://github.com/erfanoabdi/extract_android_ota_payload): cyxx and erfanoabdi
-- lpunpack: unix3dgforce
-- sdat2img: xpirt
+-   AIK: osm0sis
+-   [extract_android_ota_payload](https://github.com/erfanoabdi/extract_android_ota_payload): cyxx and erfanoabdi
+-   lpunpack: unix3dgforce
+-   sdat2img: xpirt
