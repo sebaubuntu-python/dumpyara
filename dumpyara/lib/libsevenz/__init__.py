@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0
 #
+"""7z wrapper."""
 
 from subprocess import check_output
 

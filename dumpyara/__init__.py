@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0
 #
+"""Dumpyara library."""
 
 from pathlib import Path
 
