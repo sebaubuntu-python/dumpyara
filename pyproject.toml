@@ -11,7 +11,7 @@ repository = "https://github.com/SebaUbuntu/dumpyara"
 python = "^3.9"
 Brotli = "^1.0.9"
 protobuf = "^3.20.1"
-sebaubuntu-libs = "^1.0.2"
+sebaubuntu-libs = "^1.0.5"
 
 [tool.poetry.dev-dependencies]
 
