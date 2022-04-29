@@ -38,7 +38,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "sebaubuntu-libs"
-version = "1.0.5"
+version = "1.0.6"
 description = "SebaUbuntu's shared libs"
 category = "main"
 optional = false
@@ -58,7 +58,7 @@ python-versions = ">=3.6"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e8690ca9041456d12ecba0b295cf3ed4fb225f526898cb3208a4e92a8a578a79"
+content-hash = "067f2312fb1803fa5630f4c14ec39e931abe1ae18b0b1325eaebb5dbc08596cb"
 
 [metadata.files]
 brotli = [
@@ -160,8 +160,8 @@ protobuf = [
     {file = "protobuf-3.20.1.tar.gz", hash = "sha256:adc31566d027f45efe3f44eeb5b1f329da43891634d61c75a5944e9be6dd42c9"},
 ]
 sebaubuntu-libs = [
-    {file = "sebaubuntu_libs-1.0.5-py3-none-any.whl", hash = "sha256:39d6751055dbc79181deee169216b7a50ba5e7c0104085ca212ba2e33508f4fc"},
-    {file = "sebaubuntu_libs-1.0.5.tar.gz", hash = "sha256:b291a72b26394ce18b129237462de4855ac21de21b9689560c417ab5c7db006d"},
+    {file = "sebaubuntu_libs-1.0.6-py3-none-any.whl", hash = "sha256:b223a4cf68c7dcec98c4e721a9bb07560e0f80a03e40372a7db3a17865982513"},
+    {file = "sebaubuntu_libs-1.0.6.tar.gz", hash = "sha256:6ff651330436818f4b51335806991fb6d58cc7465e469261df374f4b911b820e"},
 ]
 smmap = [
     {file = "smmap-5.0.0-py3-none-any.whl", hash = "sha256:2aba19d6a040e78d8b09de5c57e96207b09ed71d8e55ce0959eeee6c8e190d94"},
