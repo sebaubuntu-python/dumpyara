@@ -19,41 +19,60 @@ from subprocess import CalledProcessError
 ) = range(3)
 
 # partition: type
+# Please document partition where possible
 PARTITIONS = {
+	# Bootloader/raw images
+	## AOSP
 	"boot": BOOTIMAGE,
 	"dtbo": RAW,
-	"cust": FILESYSTEM,
+	"recovery": BOOTIMAGE,
+	"vendor_boot": BOOTIMAGE,
+
+	## SoC vendor/OEM/ODM
 	"exaid": BOOTIMAGE,
-	"factory": FILESYSTEM,
-	"india": RAW,
-	"my_preload": RAW,
-	"my_odm": RAW,
-	"my_stock": RAW,
-	"my_operator": RAW,
-	"my_country": RAW,
-	"my_product": RAW,
-	"my_company": RAW,
-	"my_engineering": RAW,
-	"my_heytap": RAW,
+	"tz": RAW,
+
+	# Partitions with a standard filesystem
+	## AOSP
 	"odm": FILESYSTEM,
 	"odm_dlkm": FILESYSTEM,
 	"oem": FILESYSTEM,
-	"oppo_product": FILESYSTEM,
-	"opproduct": RAW,
-	"preload_common": FILESYSTEM,
 	"product": FILESYSTEM,
-	"recovery": BOOTIMAGE,
-	"reserve": RAW,
 	"system": FILESYSTEM,
+	"system_dlkm": FILESYSTEM,
 	"system_ext": FILESYSTEM,
 	"system_other": FILESYSTEM,
-	"systemex": FILESYSTEM,
 	"vendor": FILESYSTEM,
-	"vendor_boot": BOOTIMAGE,
 	"vendor_dlkm": FILESYSTEM,
+
+	## SoC vendor/OEM/ODM
+	"cust": FILESYSTEM,
+	"factory": FILESYSTEM,
+	"india": FILESYSTEM,
+	"modem": FILESYSTEM,
+	"my_bigball": FILESYSTEM,
+	"my_carrier": FILESYSTEM,
+	"my_company": FILESYSTEM,
+	"my_country": FILESYSTEM,
+	"my_custom": FILESYSTEM,
+	"my_engineering": FILESYSTEM,
+	"my_heytap": FILESYSTEM,
+	"my_manifest": FILESYSTEM,
+	"my_odm": FILESYSTEM,
+	"my_operator": FILESYSTEM,
+	"my_preload": FILESYSTEM,
+	"my_product": FILESYSTEM,
+	"my_region": FILESYSTEM,
+	"my_stock": FILESYSTEM,
+	"my_version": FILESYSTEM,
+	"odm_ext": FILESYSTEM,
+	"oppo_product": FILESYSTEM,
+	"opproduct": FILESYSTEM,
+	"preload_common": FILESYSTEM,
+	"reserve": FILESYSTEM,
+	"special_preload": FILESYSTEM,
+	"systemex": FILESYSTEM,
 	"xrom": FILESYSTEM,
-	"modem": RAW,
-	"tz": RAW,
 }
 
 # alternative name: generic name
@@ -63,34 +82,21 @@ ALTERNATIVE_PARTITION_NAMES = {
 	"NON-HLOS": "modem",
 }
 
-# A/B partition, hoping _a is the right one...
-ALTERNATIVE_PARTITION_NAMES.update({
-	f"{alias}_a": partition
-	for alias, partition in ALTERNATIVE_PARTITION_NAMES.items()
-})
-ALTERNATIVE_PARTITION_NAMES.update({
-	f"{partition}_a": partition
-	for partition in PARTITIONS
-})
-
 def get_partition_name(file: Path):
-	for partition in list(PARTITIONS) + list(ALTERNATIVE_PARTITION_NAMES):
-		possible_names = [
-			partition,
-			f"{partition}.bin",
-			f"{partition}.ext4",
-			f"{partition}.image",
-			f"{partition}.img",
-			f"{partition}.mbn",
-			f"{partition}.new.dat",
-			f"{partition}.new.dat.br",
-			f"{partition}.raw",
-			f"{partition}.raw.img",
-		]
-		if file.name in possible_names:
-			return partition
+	"""
+	Get the partition name from the file name.
 
-	return None
+	Returns a tuple of (partition name, output name).
+	"""
+	real_partition_name = str(file.name).removesuffix("".join(file.suffixes))
+
+	for partition in list(PARTITIONS) + list(ALTERNATIVE_PARTITION_NAMES):
+		if not real_partition_name in [partition, f"{partition}_a", f"{partition}_b"]:
+			continue
+
+		return ALTERNATIVE_PARTITION_NAMES.get(partition, partition), real_partition_name
+
+	return None, None
 
 def can_be_partition(file: Path):
 	"""Check if the file can be a partition."""
@@ -99,30 +105,30 @@ def can_be_partition(file: Path):
 def extract_partition(file: Path, output_path: Path):
 	"""
 	Extract files from partition image.
-	
+
 	If the partition is raw, the file will simply be copied to the output folder,
 	else extracted using 7z (unsparsed if needed).
 	"""
-	partition_name = get_partition_name(file)
+	partition_name, output_name = get_partition_name(file)
 	if not partition_name:
 		LOGI(f"Skipping {file.stem}")
 		return
 
-	new_partition_name = ALTERNATIVE_PARTITION_NAMES.get(partition_name, partition_name)
-
-	if PARTITIONS[new_partition_name] == FILESYSTEM:
+	if PARTITIONS[partition_name] == FILESYSTEM:
 		# Make sure we have a raw image
-		raw_image = get_raw_image(partition_name, file.parent)
+		raw_image = get_raw_image(output_name, file.parent)
 
 		# TODO: EROFS
 		try:
-			sevenz(f'x {raw_image} -y -o"{output_path / new_partition_name}"/')
+			sevenz(f'x {raw_image} -y -o"{output_path / output_name}"/')
 		except CalledProcessError as e:
 			LOGE(f"Error extracting {file.stem}")
-			LOGE(f"{e.output}")
-			raise e
-	elif PARTITIONS[new_partition_name] == BOOTIMAGE:
-		extract_bootimg(file, output_path / new_partition_name)
+			LOGE(f"{e.output.decode('UTF-8', errors='ignore')}")
+	elif PARTITIONS[partition_name] == BOOTIMAGE:
+		try:
+			extract_bootimg(file, output_path / output_name)
+		except Exception as e:
+			LOGE(f"Failed to extract {file.name}, invalid boot image")
 
-	if PARTITIONS[new_partition_name] in (RAW, BOOTIMAGE):
-		copyfile(file, output_path / f"{new_partition_name}.img", follow_symlinks=True)
+	if PARTITIONS[partition_name] in (RAW, BOOTIMAGE):
+		copyfile(file, output_path / f"{output_name}.img", follow_symlinks=True)

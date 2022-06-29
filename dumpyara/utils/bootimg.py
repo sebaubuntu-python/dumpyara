@@ -7,15 +7,11 @@
 from distutils.dir_util import copy_tree
 from pathlib import Path
 from sebaubuntu_libs.libaik import AIKManager
-from sebaubuntu_libs.liblogging import LOGW
 
 def extract_bootimg(file: Path, output_path: Path):
 	aik_manager = AIKManager()
-	try:
-		image_info = aik_manager.unpackimg(file)
-	except Exception:
-		LOGW(f"Failed to extract {file.name}, invalid boot image")
-		return None
+
+	image_info = aik_manager.unpackimg(file)
 
 	output_path.mkdir(parents=True)
 
