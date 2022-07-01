@@ -6,10 +6,10 @@
 
 import brotli
 from dumpyara.lib.libsdat2img import main as sdat2img
-from dumpyara.lib.libsparseimg import SparseImage
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from shutil import move
+from subprocess import check_output
 
 def get_raw_image(partition: str, path: Path):
 	"""
@@ -20,6 +20,7 @@ def get_raw_image(partition: str, path: Path):
 	brotli_image = path / f"{partition}.new.dat.br"
 	dat_image = path / f"{partition}.new.dat"
 	transfer_list = path / f"{partition}.transfer.list"
+	unsparsed_image = path / f"{partition}.unsparsed.img"
 	raw_image = path / f"{partition}.img"
 
 	if brotli_image.is_file():
@@ -34,12 +35,12 @@ def get_raw_image(partition: str, path: Path):
 		transfer_list.unlink()
 
 	if raw_image.is_file():
-		with raw_image.open("rb") as f:
-			sparse_image = SparseImage(f)
-			if sparse_image.check():
-				LOGI(f"{raw_image.stem} is a sparse image, extracting...")
-				unsparse_file = sparse_image.unsparse()
-				move(unsparse_file, raw_image)
+		try:
+			check_output(["simg2img", raw_image, unsparsed_image]) # TODO: Rewrite libsparse...
+		except Exception:
+			pass
+		else:
+			move(unsparsed_image, raw_image)
 
 		return raw_image
 

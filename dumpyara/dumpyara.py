@@ -5,7 +5,6 @@
 #
 
 from dumpyara.lib.libpayload import extract_android_ota_payload
-from dumpyara.lib.libsparseimg import SparseImage
 from dumpyara.utils.partitions import can_be_partition, extract_partition
 import fnmatch
 from liblp.partition_tools.lpunpack import lpunpack
@@ -57,14 +56,13 @@ class Dumpyara:
 		if super_match:
 			LOGI("Super partition detected, first extracting it")
 			super_image = self.raw_images_tempdir_path / super_match[0]
+			unsparsed_super = self.raw_images_tempdir_path / "super.unsparsed.img"
 
-			unsparsed_super = None
-			with super_image.open("rb") as f:
-				sparse_image = SparseImage(f)
-				if sparse_image.check():
-					LOGI("Super is a sparse image, extracting...")
-					unsparsed_super = sparse_image.unsparse()
-			if unsparsed_super:
+			try:
+				check_output(["simg2img", super_image, unsparsed_super]) # TODO: Rewrite libsparse...
+			except Exception:
+				pass
+			else:
 				move(unsparsed_super, super_image)
 
 			lpunpack(super_image, self.raw_images_tempdir_path)
