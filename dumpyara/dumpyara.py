@@ -4,16 +4,14 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.lib.libpayload import extract_android_ota_payload
+from dumpyara.utils.multipartitions import MULTIPARTITIONS
 from dumpyara.utils.partitions import can_be_partition, extract_partition
 import fnmatch
-from liblp.partition_tools.lpunpack import lpunpack
 from os import walk
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
-from shutil import move, unpack_archive
-from subprocess import check_output
+from shutil import unpack_archive
 from tempfile import TemporaryDirectory
 
 class Dumpyara:
@@ -37,37 +35,23 @@ class Dumpyara:
 		self.raw_images_tempdir_path = Path(self.raw_images_tempdir.name)
 		self.raw_images_tempdir_files_list = []
 
-		LOGI("Extracting package...")
+		LOGI("Step 1 - Extracting package")
 		unpack_archive(self.file, self.raw_images_tempdir_path)
 		self.update_raw_images_tempdir_files_list()
 
-		# Extract payload.bin if it exists
-		# It contains all the partitions that we are interested in
-		payload_match = fnmatch.filter([str(file) for file in self.raw_images_tempdir_files_list], "*payload.bin*")
-		if payload_match:
-			LOGI("Payload partition detected, first extracting it")
-			extract_android_ota_payload(self.raw_images_tempdir_path / payload_match[0],
-			                            self.raw_images_tempdir_path)
-			self.update_raw_images_tempdir_files_list()
+		LOGI("Step 2 - Checking multipartition images")
+		for pattern, func in MULTIPARTITIONS.items():
+			match = fnmatch.filter([str(file) for file in self.raw_images_tempdir_files_list], pattern)
+			if not match:
+				continue
 
-		# Extract super first if it exists
-		# It contains all the partitions that we are interested in
-		super_match = fnmatch.filter([str(file) for file in self.raw_images_tempdir_files_list], "*super.img*")
-		if super_match:
-			LOGI("Super partition detected, first extracting it")
-			super_image = self.raw_images_tempdir_path / super_match[0]
-			unsparsed_super = self.raw_images_tempdir_path / "super.unsparsed.img"
+			for file in match:
+				multipart_image = self.raw_images_tempdir_path / file
+				LOGI(f"Found multipartition image: {multipart_image.name}")
+				func(multipart_image, self.raw_images_tempdir_path)
+				self.update_raw_images_tempdir_files_list()
 
-			try:
-				check_output(["simg2img", super_image, unsparsed_super]) # TODO: Rewrite libsparse...
-			except Exception:
-				pass
-			else:
-				move(unsparsed_super, super_image)
-
-			lpunpack(super_image, self.raw_images_tempdir_path)
-			self.update_raw_images_tempdir_files_list()
-
+		LOGI("Step 3 - Extracting partitions")
 		# Process all files
 		for file in self.raw_images_tempdir_files_list:
 			relative_file_path = file.relative_to(self.raw_images_tempdir_path)
@@ -80,6 +64,7 @@ class Dumpyara:
 			else:
 				LOGI(f"Skipping {relative_file_path}")
 
+		LOGI("Step 4 - Finalizing")
 		# Update files list
 		self.files_list.extend(sorted(self.get_recursive_files_list(self.path, relative=True),
 		                              key=strcoll_files_key))
