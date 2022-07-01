@@ -5,8 +5,8 @@
 #
 
 import brotli
-from dumpyara.lib.liblpunpack import SparseImage
 from dumpyara.lib.libsdat2img import main as sdat2img
+from dumpyara.lib.libsparseimg import SparseImage
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from shutil import move

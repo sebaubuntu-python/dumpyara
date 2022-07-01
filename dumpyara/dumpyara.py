@@ -4,15 +4,17 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.lib.liblpunpack import LpUnpack
 from dumpyara.lib.libpayload import extract_android_ota_payload
+from dumpyara.lib.libsparseimg import SparseImage
 from dumpyara.utils.partitions import can_be_partition, extract_partition
 import fnmatch
+from liblp.partition_tools.lpunpack import lpunpack
 from os import walk
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
-from shutil import unpack_archive
+from shutil import move, unpack_archive
+from subprocess import check_output
 from tempfile import TemporaryDirectory
 
 class Dumpyara:
@@ -54,8 +56,18 @@ class Dumpyara:
 		super_match = fnmatch.filter([str(file) for file in self.raw_images_tempdir_files_list], "*super.img*")
 		if super_match:
 			LOGI("Super partition detected, first extracting it")
-			LpUnpack(SUPER_IMAGE=self.raw_images_tempdir_path / super_match[0],
-			         OUTPUT_DIR=self.raw_images_tempdir_path).unpack()
+			super_image = self.raw_images_tempdir_path / super_match[0]
+
+			unsparsed_super = None
+			with super_image.open("rb") as f:
+				sparse_image = SparseImage(f)
+				if sparse_image.check():
+					LOGI("Super is a sparse image, extracting...")
+					unsparsed_super = sparse_image.unsparse()
+			if unsparsed_super:
+				move(unsparsed_super, super_image)
+
+			lpunpack(super_image, self.raw_images_tempdir_path)
 			self.update_raw_images_tempdir_files_list()
 
 		# Process all files
