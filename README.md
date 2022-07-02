@@ -39,11 +39,11 @@ optional arguments:
 -   Dynamic partitions (super.img)
 -   payload.bin
 -   Raw images (e.g. Xiaomi fastboot packages)
+-   Sparse images
 
 ### Step 3 - Partition images
--   Raw images
--   Sparsed images
--   Boot images
+-   Android boot images
+-   7z supported archives/images
 
 ## Credits
 -   AIK: osm0sis

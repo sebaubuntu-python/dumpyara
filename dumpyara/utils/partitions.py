@@ -8,8 +8,9 @@ from dumpyara.lib.libsevenz import sevenz
 from dumpyara.utils.bootimg import extract_bootimg
 from dumpyara.utils.raw_image import get_raw_image
 from pathlib import Path
+from sebaubuntu_libs.libexception import format_exception
 from sebaubuntu_libs.liblogging import LOGE, LOGI
-from shutil import copyfile
+from shutil import copyfile, move
 from subprocess import CalledProcessError
 
 (
@@ -82,53 +83,80 @@ ALTERNATIVE_PARTITION_NAMES = {
 	"NON-HLOS": "modem",
 }
 
-def get_partition_name(file: Path):
-	"""
-	Get the partition name from the file name.
+def get_partition_name(partition_name: str):
+	"""Get the unaliased partition name."""
+	return ALTERNATIVE_PARTITION_NAMES.get(partition_name, partition_name)
 
-	Returns a tuple of (partition name, output name).
-	"""
-	real_partition_name = str(file.name).removesuffix("".join(file.suffixes))
+def get_partition_names():
+	"""Get a list of partition names."""
+	return list(PARTITIONS)
 
-	for partition in list(PARTITIONS) + list(ALTERNATIVE_PARTITION_NAMES):
-		if not real_partition_name in [partition, f"{partition}_a", f"{partition}_b"]:
+def get_partition_names_with_alias():
+	"""Get a list of partition names with alias."""
+	return get_partition_names() + list(ALTERNATIVE_PARTITION_NAMES)
+
+def prepare_raw_images(files_path: Path, raw_images_path: Path):
+	"""Prepare raw images for 7z extraction."""
+	for real_partition_name in get_partition_names_with_alias():
+		partition_name = get_partition_name(real_partition_name)
+		partition_output = raw_images_path / f"{partition_name}.img"
+
+		get_raw_image(real_partition_name, files_path, partition_output)
+
+def extract_partitions(raw_images_path: Path, output_path: Path):
+	"""Extract partition files from raw images."""
+	# At this point aliases shouldn't be used anymore
+	for partition in get_partition_names():
+		partition_type = PARTITIONS[partition]
+
+		image_path = raw_images_path / f"{partition}.img"
+		if not image_path.exists():
 			continue
 
-		return ALTERNATIVE_PARTITION_NAMES.get(partition, partition), real_partition_name
+		LOGI(f"Extracting {partition}")
 
-	return None, None
+		if partition_type == BOOTIMAGE:
+			try:
+				extract_bootimg(image_path, output_path / partition)
+			except Exception as e:
+				LOGE(f"Failed to extract {image_path.name}")
+				LOGE(f"{format_exception(e)}")
+		elif partition_type == FILESYSTEM:
+			try:
+				sevenz(f'x {image_path} -y -o"{output_path / partition}"/')
+			except CalledProcessError as e:
+				LOGE(f"Error extracting {image_path.name}")
+				LOGE(f"{e.output.decode('UTF-8', errors='ignore')}")
 
-def can_be_partition(file: Path):
-	"""Check if the file can be a partition."""
-	return get_partition_name(file) is not None
+		if partition_type in (RAW, BOOTIMAGE):
+			copyfile(image_path, output_path / f"{partition}.img", follow_symlinks=True)
 
-def extract_partition(file: Path, output_path: Path):
-	"""
-	Extract files from partition image.
+def get_filename_suffixes(file: Path):
+	return "".join(file.suffixes)
 
-	If the partition is raw, the file will simply be copied to the output folder,
-	else extracted using 7z (unsparsed if needed).
-	"""
-	partition_name, output_name = get_partition_name(file)
-	if not partition_name:
-		LOGI(f"Skipping {file.stem}")
-		return
+def get_filename_without_extensions(file: Path):
+	return str(file.name).removesuffix(get_filename_suffixes(file))
 
-	if PARTITIONS[partition_name] == FILESYSTEM:
-		# Make sure we have a raw image
-		raw_image = get_raw_image(output_name, file.parent)
+def correct_ab_filenames(images_path: Path):
+	partitions = get_partition_names_with_alias()
+	for file in images_path.iterdir():
+		file_stem = get_filename_without_extensions(file)
 
-		# TODO: EROFS
-		try:
-			sevenz(f'x {raw_image} -y -o"{output_path / output_name}"/')
-		except CalledProcessError as e:
-			LOGE(f"Error extracting {file.stem}")
-			LOGE(f"{e.output.decode('UTF-8', errors='ignore')}")
-	elif PARTITIONS[partition_name] == BOOTIMAGE:
-		try:
-			extract_bootimg(file, output_path / output_name)
-		except Exception as e:
-			LOGE(f"Failed to extract {file.name}, invalid boot image")
+		for suffix in ["_a", "_b"]:
+			if not file_stem.endswith(suffix):
+				continue
 
-	if PARTITIONS[partition_name] in (RAW, BOOTIMAGE):
-		copyfile(file, output_path / f"{output_name}.img", follow_symlinks=True)
+			file_stem_unslotted = file_stem.removesuffix(suffix)
+
+			if file_stem_unslotted not in partitions:
+				continue
+
+			new_image_path = images_path / f"{file_stem_unslotted}{get_filename_suffixes(file)}"
+
+			if new_image_path.is_file():
+				file.unlink()
+				continue
+
+			move(file, new_image_path)
+
+			break
