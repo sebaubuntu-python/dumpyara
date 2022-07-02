@@ -8,7 +8,7 @@ from typing import Callable, Dict
 from liblp.partition_tools.lpunpack import lpunpack
 from pathlib import Path
 from shutil import move
-from subprocess import check_output
+from subprocess import STDOUT, check_output
 
 from dumpyara.lib.libpayload import extract_android_ota_payload
 
@@ -19,7 +19,7 @@ def extract_super(image: Path, output_dir: Path):
 	unsparsed_super = output_dir / "super.unsparsed.img"
 
 	try:
-		check_output(["simg2img", image, unsparsed_super]) # TODO: Rewrite libsparse...
+		check_output(["simg2img", image, unsparsed_super], stderr=STDOUT) # TODO: Rewrite libsparse...
 	except Exception:
 		pass
 	else:
