@@ -5,7 +5,7 @@
 #
 """7z wrapper."""
 
-from subprocess import check_output
+from subprocess import STDOUT, check_output
 
 def sevenz(command: str):
-	return check_output(f"7z {command}", shell=True)
+	return check_output(f"7z {command}", shell=True, stderr=STDOUT)
