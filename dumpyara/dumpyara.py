@@ -86,7 +86,8 @@ class Dumpyara:
 
 		# Create all_files.txt
 		LOGI("Creating all_files.txt")
-		(self.path / "all_files.txt").write_text("\n".join([str(file) for file in self.files_list]))
+		(self.path / "all_files.txt").write_text(
+			"\n".join([str(file) for file in self.files_list]) + "\n")
 
 	@staticmethod
 	def get_recursive_files_list(path: Path, relative: bool = False, as_str: bool = False):
