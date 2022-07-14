@@ -12,7 +12,7 @@ python = "^3.9"
 Brotli = "^1.0.9"
 protobuf = "^4.21.2"
 sebaubuntu-libs = "^1.1.1"
-liblp = "^1.0.1"
+liblp = "^1.0.2"
 
 [tool.poetry.dev-dependencies]
 

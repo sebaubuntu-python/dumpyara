@@ -30,7 +30,7 @@ gitdb = ">=4.0.1,<5"
 
 [[package]]
 name = "liblp"
-version = "1.0.1"
+version = "1.0.2"
 description = "Android logical partitions library ported from C++ to Python"
 category = "main"
 optional = false
@@ -66,7 +66,7 @@ python-versions = ">=3.6"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "54c7de61a108be7b48413d1701930024113cd281d71d332713727848203b1d42"
+content-hash = "35f9d88ac2c54a9ade4d8f3cbb204c3f3ad30b67c2e2239ac80e34f9a8adfe3d"
 
 [metadata.files]
 brotli = [
@@ -142,8 +142,8 @@ gitpython = [
     {file = "GitPython-3.1.27.tar.gz", hash = "sha256:1c885ce809e8ba2d88a29befeb385fcea06338d3640712b59ca623c220bb5704"},
 ]
 liblp = [
-    {file = "liblp-1.0.1-py3-none-any.whl", hash = "sha256:875f2d491250458f4e0a7d7aa03156facf49a09e82084a8eb5a46e1be995100b"},
-    {file = "liblp-1.0.1.tar.gz", hash = "sha256:46e48e58008314bb2707382796b4175a0387c65fa77e2c1ac9062350b8223f2d"},
+    {file = "liblp-1.0.2-py3-none-any.whl", hash = "sha256:beb3469f61a12c3f9ea941967a8fa4f9bf37cce486b1fe75c9d60f2db2f8ef4c"},
+    {file = "liblp-1.0.2.tar.gz", hash = "sha256:5e522f5fb4387764a0efd222ffdc721d21f85af5ab64a3efb58ec8109d280a45"},
 ]
 protobuf = [
     {file = "protobuf-4.21.2-cp310-abi3-win32.whl", hash = "sha256:d622dc75e289e8b3031dd8b4e87df508f11a6b3d86a49fb50256af7ce030d35b"},
