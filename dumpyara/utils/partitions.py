@@ -82,6 +82,14 @@ ALTERNATIVE_PARTITION_NAMES = {
 	"dtbo-verified": "dtbo",
 	"NON-HLOS": "modem",
 }
+ALTERNATIVE_PARTITION_NAMES.update({
+	f"{partition}_a": partition
+	for partition in PARTITIONS.keys()
+})
+ALTERNATIVE_PARTITION_NAMES.update({
+	f"{partition}_b": partition
+	for partition in PARTITIONS.keys()
+})
 
 def get_partition_name(partition_name: str):
 	"""Get the unaliased partition name."""
