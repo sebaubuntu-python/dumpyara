@@ -29,5 +29,5 @@ def extract_super(image: Path, output_dir: Path):
 
 MULTIPARTITIONS: Dict[str, Callable[[Path, Path], None]] = {
 	"*payload.bin*": extract_payload,
-	"*super.img*": extract_super,
+	"*super*": extract_super,
 }
