@@ -44,7 +44,7 @@ class Dumpyara:
 		for file in self.get_recursive_files_list(self.extracted_archive_tempdir_path):
 			if file == self.extracted_archive_tempdir_path / file.name:
 				continue
-			move(file, self.extracted_archive_tempdir_path)
+			move(str(file), self.extracted_archive_tempdir_path)
 		self.update_extracted_archive_tempdir_files_list()
 
 		LOGI("Step 2 - Preparing partition images")

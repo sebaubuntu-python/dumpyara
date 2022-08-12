@@ -10,6 +10,7 @@ from dumpyara.utils.raw_image import get_raw_image
 from pathlib import Path
 from sebaubuntu_libs.libexception import format_exception
 from sebaubuntu_libs.liblogging import LOGE, LOGI
+from sebaubuntu_libs.libstring import removesuffix
 from shutil import copyfile, move
 from subprocess import CalledProcessError
 
@@ -143,7 +144,7 @@ def get_filename_suffixes(file: Path):
 	return "".join(file.suffixes)
 
 def get_filename_without_extensions(file: Path):
-	return str(file.name).removesuffix(get_filename_suffixes(file))
+	return removesuffix(str(file.name), get_filename_suffixes(file))
 
 def correct_ab_filenames(images_path: Path):
 	partitions = get_partition_names_with_alias()
@@ -154,7 +155,7 @@ def correct_ab_filenames(images_path: Path):
 			if not file_stem.endswith(suffix):
 				continue
 
-			file_stem_unslotted = file_stem.removesuffix(suffix)
+			file_stem_unslotted = removesuffix(file_stem, suffix)
 
 			if file_stem_unslotted not in partitions:
 				continue

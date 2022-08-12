@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/SebaUbuntu/dumpyara"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 Brotli = "^1.0.9"
 protobuf = "^4.21.5"
 sebaubuntu-libs = "^1.1.1"
