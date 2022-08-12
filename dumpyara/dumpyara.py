@@ -7,12 +7,15 @@
 from dumpyara.utils.multipartitions import MULTIPARTITIONS
 from dumpyara.utils.partitions import correct_ab_filenames, extract_partitions, prepare_raw_images
 import fnmatch
-from os import walk
+from os import chmod, walk, unlink
+try:
+	from os import chflags
+except Exception:
+	chflags = lambda *args, **kwargs: None
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
-from shutil import move, unpack_archive
-from tempfile import TemporaryDirectory
+from shutil import move, rmtree, unpack_archive
 from typing import List
 
 class Dumpyara:
@@ -33,8 +36,8 @@ class Dumpyara:
 
 		LOGI("Step 1 - Extracting archive")
 		# Create a temporary directory where we will extract the archive
-		self.extracted_archive_tempdir = TemporaryDirectory()
-		self.extracted_archive_tempdir_path = Path(self.extracted_archive_tempdir.name)
+		self.extracted_archive_tempdir_path = self.path / "temp_extracted_archive"
+		self.extracted_archive_tempdir_path.mkdir()
 		self.extracted_archive_tempdir_files_list: List[Path] = []
 
 		# Extract the archive
@@ -49,8 +52,8 @@ class Dumpyara:
 
 		LOGI("Step 2 - Preparing partition images")
 		# Create a temporary directory where we will keep the raw images
-		self.raw_images_tempdir = TemporaryDirectory()
-		self.raw_images_tempdir_path = Path(self.raw_images_tempdir.name)
+		self.raw_images_tempdir_path = self.path / "temp_raw_images"
+		self.raw_images_tempdir_path.mkdir()
 
 		# Check for multipartitions
 		for pattern, func in MULTIPARTITIONS.items():
@@ -70,14 +73,14 @@ class Dumpyara:
 		correct_ab_filenames(self.raw_images_tempdir_path)
 
 		# We don't need extracted files anymore
-		self.extracted_archive_tempdir.cleanup()
+		self.rmtree(self.extracted_archive_tempdir_path)
 		self.extracted_archive_tempdir_files_list.clear()
 
 		LOGI("Step 3 - Extracting partitions")
 		extract_partitions(self.raw_images_tempdir_path, self.path)
 
 		# We don't need raw images anymore
-		self.raw_images_tempdir.cleanup()
+		self.rmtree(self.raw_images_tempdir_path)
 
 		LOGI("Step 4 - Finalizing")
 		# Update files list
@@ -103,3 +106,30 @@ class Dumpyara:
 		self.extracted_archive_tempdir_files_list.clear()
 		self.extracted_archive_tempdir_files_list.extend(
 				self.get_recursive_files_list(self.extracted_archive_tempdir_path, True, True))
+
+	@classmethod
+	def rmtree(cls, name: Path):
+		def onerror(func, path, exc_info):
+			if issubclass(exc_info[0], PermissionError):
+				def resetperms(path):
+					chflags(path, 0)
+					chmod(path, 0o700)
+
+				try:
+					if path != name:
+						resetperms(name.parent)
+					resetperms(path)
+
+					try:
+						unlink(path)
+					# PermissionError is raised on FreeBSD for directories
+					except (IsADirectoryError, PermissionError):
+						cls.rmtree(path)
+				except FileNotFoundError:
+					pass
+			elif issubclass(exc_info[0], FileNotFoundError):
+				pass
+			else:
+				raise
+
+		rmtree(str(name), onerror=onerror)
