@@ -5,7 +5,7 @@ description = "Android firmware extractor"
 authors = ["Sebastiano Barezzi <barezzisebastiano@gmail.com>"]
 license = "GPL-3.0"
 readme = "README.md"
-repository = "https://github.com/SebaUbuntu/dumpyara"
+repository = "https://github.com/sebaubuntu-python/dumpyara"
 
 [tool.poetry.dependencies]
 python = "^3.8"
