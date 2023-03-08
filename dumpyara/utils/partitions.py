@@ -32,6 +32,7 @@ PARTITIONS = {
 
 	## SoC vendor/OEM/ODM
 	"exaid": BOOTIMAGE,
+	"rescue": BOOTIMAGE,
 	"tz": RAW,
 
 	# Partitions with a standard filesystem
