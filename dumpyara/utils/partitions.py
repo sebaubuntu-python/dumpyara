@@ -4,15 +4,17 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.lib.libsevenz import sevenz
-from dumpyara.utils.bootimg import extract_bootimg
-from dumpyara.utils.raw_image import get_raw_image
 from pathlib import Path
 from sebaubuntu_libs.libexception import format_exception
 from sebaubuntu_libs.liblogging import LOGE, LOGI
 from sebaubuntu_libs.libstring import removesuffix
 from shutil import copyfile, move
 from subprocess import CalledProcessError
+from typing import List
+
+from dumpyara.lib.libsevenz import sevenz
+from dumpyara.utils.bootimg import extract_bootimg
+from dumpyara.utils.raw_image import get_raw_image
 
 (
 	FILESYSTEM,
@@ -84,14 +86,6 @@ ALTERNATIVE_PARTITION_NAMES = {
 	"dtbo-verified": "dtbo",
 	"NON-HLOS": "modem",
 }
-ALTERNATIVE_PARTITION_NAMES.update({
-	f"{partition}_a": partition
-	for partition in PARTITIONS.keys()
-})
-ALTERNATIVE_PARTITION_NAMES.update({
-	f"{partition}_b": partition
-	for partition in PARTITIONS.keys()
-})
 
 def get_partition_name(partition_name: str):
 	"""Get the unaliased partition name."""
@@ -105,13 +99,41 @@ def get_partition_names_with_alias():
 	"""Get a list of partition names with alias."""
 	return get_partition_names() + list(ALTERNATIVE_PARTITION_NAMES)
 
+def get_partition_names_with_ab():
+	"""Get a list of partition names with A/B variants.
+
+	This is used during step 2 to also extract the A/B partitions."""
+	partitions: List[str] = []
+
+	for partition in get_partition_names_with_alias():
+		partitions.append(partition)
+		partitions.append(f"{partition}_a")
+		partitions.append(f"{partition}_b")
+
+	return partitions
+
 def prepare_raw_images(files_path: Path, raw_images_path: Path):
 	"""Prepare raw images for 7z extraction."""
-	for real_partition_name in get_partition_names_with_alias():
-		partition_name = get_partition_name(real_partition_name)
+	for partition_name in get_partition_names_with_ab():
 		partition_output = raw_images_path / f"{partition_name}.img"
 
-		get_raw_image(real_partition_name, files_path, partition_output)
+		get_raw_image(partition_name, files_path, partition_output)
+
+def fix_aliases(images_path: Path):
+	"""Move aliased partitions to their generic name."""
+	for alt_name, name in ALTERNATIVE_PARTITION_NAMES.items():
+		alt_path = images_path / f"{alt_name}.img"
+		partition_path = images_path / f"{name}.img"
+
+		if not alt_path.exists():
+			continue
+
+		if partition_path.exists():
+			LOGI(f"Ignoring {alt_name} ({name} already extracted)")
+			alt_path.unlink()
+
+		LOGI(f"Fixing alias {alt_name} -> {name}")
+		move(alt_path, partition_path)
 
 def extract_partitions(raw_images_path: Path, output_path: Path):
 	"""Extract partition files from raw images."""
@@ -150,23 +172,34 @@ def get_filename_without_extensions(file: Path):
 def correct_ab_filenames(images_path: Path):
 	partitions = get_partition_names_with_alias()
 	for file in images_path.iterdir():
+		if not file.is_file():
+			LOGI(f"correct_ab_filenames: {file} doesn't exist, skipping")
+			continue
+
 		file_stem = get_filename_without_extensions(file)
+		LOGI(f"correct_ab_filenames: file: {file}, file_stem: {file_stem}")
 
-		for suffix in ["_a", "_b"]:
-			if not file_stem.endswith(suffix):
-				continue
+		if not file_stem.endswith("_a") and not file_stem.endswith("_b"):
+			LOGI(f"correct_ab_filenames: file_stem doesn't end with a suffix, skipping")
+			continue
 
-			file_stem_unslotted = removesuffix(file_stem, suffix)
+		suffix = file_stem[-2:]
+		file_stem_unslotted = removesuffix(file_stem, suffix)
 
-			if file_stem_unslotted not in partitions:
-				continue
+		if file_stem_unslotted not in partitions:
+			LOGI(f"correct_ab_filenames: file_stem_unslotted {file_stem_unslotted} not in the list of known partitions, skipping")
+			continue
 
-			new_image_path = images_path / f"{file_stem_unslotted}{get_filename_suffixes(file)}"
+		non_ab_partition_path = images_path / f"{file_stem_unslotted}{get_filename_suffixes(file)}"
+		a_partition_path = images_path / f"{file_stem_unslotted}_a{get_filename_suffixes(file)}"
+		b_partition_path = images_path / f"{file_stem_unslotted}_b{get_filename_suffixes(file)}"
 
-			if new_image_path.is_file():
-				file.unlink()
-				continue
+		if non_ab_partition_path.is_file():
+			LOGI(f"correct_ab_filenames: {non_ab_partition_path} already exists, skipping")
+			file.unlink()
+			continue
 
-			move(file, new_image_path)
-
-			break
+		if a_partition_path.is_file():
+			move(a_partition_path, non_ab_partition_path)
+		elif b_partition_path.is_file():
+			move(b_partition_path, non_ab_partition_path)

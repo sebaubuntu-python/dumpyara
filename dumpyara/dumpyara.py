@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from dumpyara.utils.multipartitions import MULTIPARTITIONS
-from dumpyara.utils.partitions import correct_ab_filenames, extract_partitions, prepare_raw_images
 import fnmatch
 from os import chmod, walk, unlink
 try:
@@ -17,6 +15,14 @@ from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
 from shutil import move, rmtree, unpack_archive
 from typing import List
+
+from dumpyara.utils.multipartitions import MULTIPARTITIONS
+from dumpyara.utils.partitions import (
+    correct_ab_filenames,
+	fix_aliases,
+	extract_partitions,
+	prepare_raw_images,
+)
 
 class Dumpyara:
 	"""
@@ -71,6 +77,9 @@ class Dumpyara:
 
 		# Fix slotted filenames if needed
 		correct_ab_filenames(self.raw_images_tempdir_path)
+
+		# Fix aliases
+		fix_aliases(self.raw_images_tempdir_path)
 
 		# We don't need extracted files anymore
 		self.rmtree(self.extracted_archive_tempdir_path)
