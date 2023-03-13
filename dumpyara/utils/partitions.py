@@ -20,7 +20,8 @@ from dumpyara.utils.raw_image import get_raw_image
 	FILESYSTEM,
 	BOOTIMAGE,
 	RAW,
-) = range(3)
+	LOGICAL,
+) = range(4)
 
 # partition: type
 # Please document partition where possible
@@ -36,6 +37,10 @@ PARTITIONS = {
 	"exaid": BOOTIMAGE,
 	"rescue": BOOTIMAGE,
 	"tz": RAW,
+
+	# Logical partitions
+	## AOSP
+	"super": LOGICAL,
 
 	# Partitions with a standard filesystem
 	## AOSP

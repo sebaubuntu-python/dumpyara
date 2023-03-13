@@ -23,6 +23,7 @@ from dumpyara.utils.partitions import (
 	extract_partitions,
 	prepare_raw_images,
 )
+from dumpyara.utils.sparsed_images import prepare_sparsed_images
 
 class Dumpyara:
 	"""
@@ -60,6 +61,10 @@ class Dumpyara:
 		# Create a temporary directory where we will keep the raw images
 		self.raw_images_tempdir_path = self.path / "temp_raw_images"
 		self.raw_images_tempdir_path.mkdir()
+
+		# Check for sparsed images
+		prepare_sparsed_images(self.extracted_archive_tempdir_path)
+		self.update_extracted_archive_tempdir_files_list()
 
 		# Check for multipartitions
 		for pattern, func in MULTIPARTITIONS.items():

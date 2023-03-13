@@ -7,6 +7,7 @@
 from typing import Callable, Dict
 from liblp.partition_tools.lpunpack import lpunpack
 from pathlib import Path
+from sebaubuntu_libs.liblogging import LOGI
 from shutil import move
 from subprocess import STDOUT, check_output
 
@@ -21,7 +22,7 @@ def extract_super(image: Path, output_dir: Path):
 	try:
 		check_output(["simg2img", image, unsparsed_super], stderr=STDOUT) # TODO: Rewrite libsparse...
 	except Exception:
-		pass
+		LOGI(f"Failed to unsparse {image.name}")
 	else:
 		move(unsparsed_super, image)
 
