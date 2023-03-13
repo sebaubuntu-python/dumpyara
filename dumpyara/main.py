@@ -24,15 +24,15 @@ def main():
 						help="custom output folder")
 
 	# Optional arguments
-	parser.add_argument("-v", "--verbose", action='store_true',
-						help="enable debugging logging")
+	parser.add_argument("-d", "--debug", action='store_true',
+						help="enable debugging features")
 
 	args = parser.parse_args()
 
 	setup_locale()
 
-	setup_logging(args.verbose)
+	setup_logging(args.debug)
 
-	dumpyara = Dumpyara(args.file, args.output)
+	dumpyara = Dumpyara(args.file, args.output, args.debug)
 
 	print(f"\nDone! You can find the dump in {str(dumpyara.path)}")

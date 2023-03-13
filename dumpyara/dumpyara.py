@@ -29,7 +29,7 @@ class Dumpyara:
 	"""
 	A class representing an Android dump
 	"""
-	def __init__(self, file: Path, output_path: Path) -> None:
+	def __init__(self, file: Path, output_path: Path, debug: bool = False) -> None:
 		"""Initialize dumpyara class."""
 		self.file = file
 		self.output_path = output_path
@@ -38,73 +38,87 @@ class Dumpyara:
 		self.path = self.output_path / self.file.stem
 		self.files_list = []
 
-		# Make output dir
-		self.path.mkdir(parents=True)
-
-		LOGI("Step 1 - Extracting archive")
-		# Create a temporary directory where we will extract the archive
+		# Temporary directories
 		self.extracted_archive_tempdir_path = self.path / "temp_extracted_archive"
-		self.extracted_archive_tempdir_path.mkdir()
 		self.extracted_archive_tempdir_files_list: List[Path] = []
 
-		# Extract the archive
-		unpack_archive(self.file, self.extracted_archive_tempdir_path)
-
-		# Flatten the folder
-		for file in self.get_recursive_files_list(self.extracted_archive_tempdir_path):
-			if file == self.extracted_archive_tempdir_path / file.name:
-				continue
-			move(str(file), self.extracted_archive_tempdir_path)
-		self.update_extracted_archive_tempdir_files_list()
-
-		LOGI("Step 2 - Preparing partition images")
-		# Create a temporary directory where we will keep the raw images
 		self.raw_images_tempdir_path = self.path / "temp_raw_images"
-		self.raw_images_tempdir_path.mkdir()
 
-		# Check for sparsed images
-		prepare_sparsed_images(self.extracted_archive_tempdir_path)
-		self.update_extracted_archive_tempdir_files_list()
+		try:
+			# Make output dir
+			self.path.mkdir(parents=True)
 
-		# Check for multipartitions
-		for pattern, func in MULTIPARTITIONS.items():
-			match = fnmatch.filter(self.extracted_archive_tempdir_files_list, pattern)
-			if not match:
-				continue
+			LOGI("Step 1 - Extracting archive")
+			# Create a temporary directory where we will extract the archive
+			self.extracted_archive_tempdir_path.mkdir()
 
-			for file in match:
-				multipart_image = self.extracted_archive_tempdir_path / file
-				LOGI(f"Found multipartition image: {multipart_image.name}")
-				func(multipart_image, self.raw_images_tempdir_path)
+			# Extract the archive
+			unpack_archive(self.file, self.extracted_archive_tempdir_path)
 
-		# Check for partitions
-		prepare_raw_images(self.extracted_archive_tempdir_path, self.raw_images_tempdir_path)
+			# Flatten the folder
+			for file in self.get_recursive_files_list(self.extracted_archive_tempdir_path):
+				if file == self.extracted_archive_tempdir_path / file.name:
+					continue
 
-		# Fix slotted filenames if needed
-		correct_ab_filenames(self.raw_images_tempdir_path)
+				move(str(file), self.extracted_archive_tempdir_path)
 
-		# Fix aliases
-		fix_aliases(self.raw_images_tempdir_path)
+			self.update_extracted_archive_tempdir_files_list()
 
-		# We don't need extracted files anymore
-		self.rmtree(self.extracted_archive_tempdir_path)
-		self.extracted_archive_tempdir_files_list.clear()
+			LOGI("Step 2 - Preparing partition images")
+			# Create a temporary directory where we will keep the raw images
+			self.raw_images_tempdir_path.mkdir()
 
-		LOGI("Step 3 - Extracting partitions")
-		extract_partitions(self.raw_images_tempdir_path, self.path)
+			# Check for sparsed images
+			prepare_sparsed_images(self.extracted_archive_tempdir_path)
+			self.update_extracted_archive_tempdir_files_list()
 
-		# We don't need raw images anymore
-		self.rmtree(self.raw_images_tempdir_path)
+			# Check for multipartitions
+			for pattern, func in MULTIPARTITIONS.items():
+				match = fnmatch.filter(self.extracted_archive_tempdir_files_list, pattern)
+				if not match:
+					continue
 
-		LOGI("Step 4 - Finalizing")
-		# Update files list
-		self.files_list.extend(sorted(self.get_recursive_files_list(self.path, relative=True),
-		                              key=strcoll_files_key))
+				for file in match:
+					multipart_image = self.extracted_archive_tempdir_path / file
+					LOGI(f"Found multipartition image: {multipart_image.name}")
+					func(multipart_image, self.raw_images_tempdir_path)
 
-		# Create all_files.txt
-		LOGI("Creating all_files.txt")
-		(self.path / "all_files.txt").write_text(
-			"\n".join([str(file) for file in self.files_list]) + "\n")
+			# Check for partitions
+			prepare_raw_images(self.extracted_archive_tempdir_path, self.raw_images_tempdir_path)
+
+			# Fix slotted filenames if needed
+			correct_ab_filenames(self.raw_images_tempdir_path)
+
+			# Fix aliases
+			fix_aliases(self.raw_images_tempdir_path)
+
+			# We don't need extracted files anymore
+			self.rmtree(self.extracted_archive_tempdir_path)
+
+			LOGI("Step 3 - Extracting partitions")
+			extract_partitions(self.raw_images_tempdir_path, self.path)
+
+			LOGI("Step 4 - Finalizing")
+			# Update files list
+			self.files_list.extend(sorted(
+				self.get_recursive_files_list(self.path, relative=True),
+				key=strcoll_files_key
+			))
+
+			# Create all_files.txt
+			LOGI("Creating all_files.txt")
+			(self.path / "all_files.txt").write_text(
+				"\n".join([str(file) for file in self.files_list]) + "\n"
+			)
+		finally:
+			if not debug:
+				# Remove temporary directories if they exist
+				if self.extracted_archive_tempdir_path.exists():
+					self.rmtree(self.extracted_archive_tempdir_path)
+				self.extracted_archive_tempdir_files_list.clear()
+
+				if self.raw_images_tempdir_path.exists():
+					self.rmtree(self.raw_images_tempdir_path)
 
 	@staticmethod
 	def get_recursive_files_list(path: Path, relative: bool = False, as_str: bool = False):
