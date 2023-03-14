@@ -25,9 +25,13 @@ PARTITIONS = {
 	# Bootloader/raw images
 	## AOSP
 	"boot": BOOTIMAGE,
+	"boot-debug": BOOTIMAGE,
 	"dtbo": RAW,
+	"init_boot": BOOTIMAGE,
 	"recovery": BOOTIMAGE,
 	"vendor_boot": BOOTIMAGE,
+	"vendor_boot-debug": BOOTIMAGE,
+	"vendor_kernel_boot": BOOTIMAGE,
 
 	## SoC vendor/OEM/ODM
 	"exaid": BOOTIMAGE,
