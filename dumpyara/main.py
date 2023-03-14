@@ -6,7 +6,7 @@
 
 from argparse import ArgumentParser
 from dumpyara import __version__ as version, current_path
-from dumpyara.dumpyara import Dumpyara
+from dumpyara.dumpyara import dumpyara
 from dumpyara.utils.logging import setup_logging
 from pathlib import Path
 from sebaubuntu_libs.liblocale import setup_locale
@@ -33,6 +33,6 @@ def main():
 
 	setup_logging(args.debug)
 
-	dumpyara = Dumpyara(args.file, args.output, args.debug)
+	output_path = dumpyara(args.file, args.output, args.debug)
 
-	print(f"\nDone! You can find the dump in {str(dumpyara.path)}")
+	print(f"\nDone! You can find the dump in {str(output_path)}")

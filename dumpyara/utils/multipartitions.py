@@ -26,6 +26,9 @@ def extract_super(image: Path, output_dir: Path):
 	else:
 		move(unsparsed_super, image)
 
+	if unsparsed_super.is_file():
+		unsparsed_super.unlink()
+
 	lpunpack(image, output_dir)
 
 MULTIPARTITIONS: Dict[str, Callable[[Path, Path], None]] = {

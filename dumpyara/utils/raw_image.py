@@ -53,6 +53,9 @@ def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
 		else:
 			move(unsparsed_image, image_path)
 
+		if unsparsed_image.is_file():
+			unsparsed_image.unlink()
+
 		LOGI(f"Copying {image_path.name}")
 		copyfile(image_path, output_image_path, follow_symlinks=True)
 		return True

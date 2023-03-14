@@ -34,5 +34,3 @@ def prepare_sparsed_images(files_path: Path):
 			check_output(["simg2img", *sparsechunk_image_files, output_image], stderr=STDOUT)
 			for sparsechunk_image_file in sparsechunk_image_files:
 				sparsechunk_image_file.unlink()
-		else:
-			LOGI(f"Skipping {partition} (no sparsechunk images found)")
