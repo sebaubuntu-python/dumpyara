@@ -1,5 +1,6 @@
 # dumpyara
 
+[![PyPI version](https://img.shields.io/pypi/v/dumpyara)](https://pypi.org/project/dumpyara/)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/85d2c39edbed4dc38f680db01f7b83af)](https://www.codacy.com/gh/sebaubuntu-python/dumpyara/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=sebaubuntu-python/dumpyara&amp;utm_campaign=Badge_Grade)
 
 Requires Python 3.8 or greater
