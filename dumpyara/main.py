@@ -20,7 +20,7 @@ def main():
 	# Main arguments
 	parser.add_argument("file", type=Path,
 						help="path to a device OTA")
-	parser.add_argument("-o", "--output", type=Path, default=current_path / "working",
+	parser.add_argument("-o", "--output", type=Path, default=None,
 						help="custom output folder")
 
 	# Optional arguments
@@ -33,6 +33,10 @@ def main():
 
 	setup_logging(args.debug)
 
-	output_path = dumpyara(args.file, args.output, args.debug)
+	output = current_path / args.file.stem
+	if args.output:
+		output = args.output
+
+	output_path = dumpyara(args.file, output, args.debug)
 
 	print(f"\nDone! You can find the dump in {str(output_path)}")
