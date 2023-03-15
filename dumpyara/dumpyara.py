@@ -40,6 +40,10 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
 		LOGI("Step 3 - Extracting partitions")
 		step_3(raw_images_path, path)
 
+		# Make sure system folder exists and it's not empty
+		assert (path / "system").exists(), "System folder doesn't exist"
+		assert len(list((path / "system").iterdir())) > 0, "System folder is empty"
+
 		LOGI("Step 4 - Finalizing")
 		# Update files list
 		files_list = sorted(
