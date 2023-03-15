@@ -150,22 +150,20 @@ def correct_ab_filenames(images_path: Path):
 	partitions = get_partition_names_with_alias()
 	for file in images_path.iterdir():
 		if not file.is_file():
-			LOGI(f"correct_ab_filenames: {file} doesn't exist, skipping")
 			continue
 
 		file_stem = get_filename_without_extensions(file)
-		LOGI(f"correct_ab_filenames: file: {file}, file_stem: {file_stem}")
 
 		if not file_stem.endswith("_a") and not file_stem.endswith("_b"):
-			LOGI(f"correct_ab_filenames: file_stem doesn't end with a suffix, skipping")
 			continue
 
 		suffix = file_stem[-2:]
 		file_stem_unslotted = removesuffix(file_stem, suffix)
 
 		if file_stem_unslotted not in partitions:
-			LOGI(f"correct_ab_filenames: file_stem_unslotted {file_stem_unslotted} not in the list of known partitions, skipping")
 			continue
+
+		LOGI(f"correct_ab_filenames: file: {file}, file_stem: {file_stem}")
 
 		non_ab_partition_path = images_path / f"{file_stem_unslotted}{get_filename_suffixes(file)}"
 		a_partition_path = images_path / f"{file_stem_unslotted}_a{get_filename_suffixes(file)}"
