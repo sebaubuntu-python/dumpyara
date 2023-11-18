@@ -7,11 +7,17 @@
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
+from shutil import which
 
 from dumpyara.utils.files import get_recursive_files_list, rmtree_recursive
 from dumpyara.steps.step_1 import step_1
 from dumpyara.steps.step_2 import step_2
 from dumpyara.steps.step_3 import step_3
+
+REQUIRED_TOOLS = {
+	"7z": "p7zip",
+	"simg2img": "platform-tools",
+}
 
 def dumpyara(file: Path, output_path: Path, debug: bool = False):
 	"""Dump an Android firmware."""
@@ -19,6 +25,11 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
 	# Temporary directories
 	extracted_archive_path = output_path / "temp_extracted_archive"
 	raw_images_path = output_path / "temp_raw_images"
+
+	# First, check the necessary tools are installed
+	for tool, package in REQUIRED_TOOLS.items():
+		if not which(tool):
+			raise RuntimeError(f"Please install {package} from your distro's repositories")
 
 	try:
 		# Make output and temporary directories
