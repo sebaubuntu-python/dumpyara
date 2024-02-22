@@ -16,6 +16,7 @@ from dumpyara.steps.step_3 import step_3
 
 REQUIRED_TOOLS = {
 	"7z": "p7zip",
+	"fsck.erofs": "erofs-utils",
 	"simg2img": "platform-tools",
 }
 

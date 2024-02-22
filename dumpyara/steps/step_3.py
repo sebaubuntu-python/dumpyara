@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2023 Dumpyara Project
+# Copyright (C) 2023-2024 Dumpyara Project
 #
 # SPDX-License-Identifier: GPL-3.0
 #
@@ -10,8 +10,9 @@ This step will extract the raw images.
 """
 
 from pathlib import Path
+from dumpyara.lib.liberofs import erofs
 from sebaubuntu_libs.libexception import format_exception
-from sebaubuntu_libs.liblogging import LOGE, LOGI
+from sebaubuntu_libs.liblogging import LOGD, LOGE, LOGI
 from shutil import copyfile
 from subprocess import CalledProcessError
 
@@ -45,10 +46,14 @@ def step_3(raw_images_path: Path, output_path: Path):
 				LOGE(f"{format_exception(e)}")
 		elif partition_type == FILESYSTEM:
 			try:
-				sevenz(f'x {image_path} -y -o"{output_path / partition}"/')
+				erofs(f'--extract="{output_path / partition}" {image_path}')
 			except CalledProcessError as e:
-				LOGE(f"Error extracting {image_path.name}")
-				LOGE(f"{e.output.decode('UTF-8', errors='ignore')}")
+				LOGD(f"Failed to extract {image_path.name} with erofs, trying 7z")
+				try:
+					sevenz(f'x {image_path} -y -o"{output_path / partition}"/')
+				except CalledProcessError as e:
+					LOGE(f"Error extracting {image_path.name}")
+					LOGE(f"{e.output.decode('UTF-8', errors='ignore')}")
 
 		if partition_type in (RAW, BOOTIMAGE):
 			copyfile(image_path, output_path / f"{partition}.img", follow_symlinks=True)

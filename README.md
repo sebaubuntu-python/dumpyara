@@ -33,6 +33,7 @@ python3 -m dumpyara <path to OTA file>
 ### Step 3 - Partition images
 -   Android boot images
 -   7z supported archives/images
+-   EROFS images using erofs-utils
 
 ## Credits
 -   AIK: osm0sis
