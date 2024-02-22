@@ -11,7 +11,7 @@ from sebaubuntu_libs.libaik import AIKManager
 def extract_bootimg(file: Path, output_path: Path):
 	aik_manager = AIKManager()
 
-	image_info = aik_manager.unpackimg(file)
+	image_info = aik_manager.unpackimg(file, ignore_ramdisk_errors=True)
 
 	output_path.mkdir(parents=True)
 
