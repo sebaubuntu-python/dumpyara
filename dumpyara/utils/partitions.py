@@ -175,6 +175,8 @@ def correct_ab_filenames(images_path: Path):
 			continue
 
 		if a_partition_path.is_file():
+			LOGI(f"correct_ab_filenames: {a_partition_path} -> {non_ab_partition_path}")
 			move(a_partition_path, non_ab_partition_path)
 		elif b_partition_path.is_file():
+			LOGI(f"correct_ab_filenames: {b_partition_path} -> {non_ab_partition_path}")
 			move(b_partition_path, non_ab_partition_path)
