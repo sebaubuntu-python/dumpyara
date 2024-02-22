@@ -24,7 +24,7 @@ from dumpyara.utils.partitions import (
 	get_partition_names,
 )
 
-def step_3(raw_images_path: Path, output_path: Path):
+def extract_images(raw_images_path: Path, output_path: Path):
 	"""
 	Extract the raw images.
 	"""

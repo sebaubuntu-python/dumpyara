@@ -14,7 +14,7 @@ from shutil import move, unpack_archive
 
 from dumpyara.utils.files import get_recursive_files_list
 
-def step_1(archive_path: Path, extracted_archive_path: Path):
+def extract_archive(archive_path: Path, extracted_archive_path: Path):
 	"""
 	Extract the archive into a folder.
 	"""

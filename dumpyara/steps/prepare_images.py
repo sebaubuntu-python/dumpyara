@@ -22,7 +22,7 @@ from dumpyara.utils.partitions import (
 )
 from dumpyara.utils.sparsed_images import prepare_sparsed_images
 
-def step_2(extracted_archive_path: Path, raw_images_path: Path):
+def prepare_images(extracted_archive_path: Path, raw_images_path: Path):
 	"""
 	Convert the archive files to raw images ready to be extracted.
 	"""

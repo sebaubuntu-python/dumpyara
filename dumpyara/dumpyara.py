@@ -10,9 +10,9 @@ from sebaubuntu_libs.libreorder import strcoll_files_key
 from shutil import which
 
 from dumpyara.utils.files import get_recursive_files_list, rmtree_recursive
-from dumpyara.steps.step_1 import step_1
-from dumpyara.steps.step_2 import step_2
-from dumpyara.steps.step_3 import step_3
+from dumpyara.steps.extract_archive import extract_archive
+from dumpyara.steps.extract_images import extract_images
+from dumpyara.steps.prepare_images import prepare_images
 
 REQUIRED_TOOLS = {
 	"7z": "p7zip",
@@ -39,13 +39,13 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
 		raw_images_path.mkdir()
 
 		LOGI("Step 1 - Extracting archive")
-		step_1(file, extracted_archive_path)
+		extract_archive(file, extracted_archive_path)
 
 		LOGI("Step 2 - Preparing partition images")
-		step_2(extracted_archive_path, raw_images_path)
+		prepare_images(extracted_archive_path, raw_images_path)
 
 		LOGI("Step 3 - Extracting partitions")
-		step_3(raw_images_path, output_path)
+		extract_images(raw_images_path, output_path)
 
 		# Make sure system folder exists and it's not empty
 		assert (output_path / "system").exists(), "System folder doesn't exist"
