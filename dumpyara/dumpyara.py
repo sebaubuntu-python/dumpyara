@@ -30,7 +30,7 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
 	# First, check the necessary tools are installed
 	for tool, package in REQUIRED_TOOLS.items():
 		if not which(tool):
-			raise RuntimeError(f"Please install {package} required by {tool} from your distro's repositories")
+			raise RuntimeError(f"Please install {package} for {tool} from your distro's repositories")
 
 	try:
 		# Make output and temporary directories
