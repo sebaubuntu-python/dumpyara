@@ -7,6 +7,7 @@
 from typing import Callable, Dict
 from liblp.partition_tools.lpunpack import lpunpack
 from pathlib import Path
+from re import compile
 from sebaubuntu_libs.liblogging import LOGI
 from shutil import move
 from subprocess import STDOUT, check_output
@@ -32,6 +33,9 @@ def extract_super(image: Path, output_dir: Path):
 	lpunpack(image, output_dir)
 
 MULTIPARTITIONS: Dict[str, Callable[[Path, Path], None]] = {
-	"*payload.bin*": extract_payload,
-	"*super*": extract_super,
+	compile(key): value
+	for key, value in {
+		"payload.bin": extract_payload,
+		"super(?!.*(_empty)).*\\.img": extract_super,
+	}.items()
 }

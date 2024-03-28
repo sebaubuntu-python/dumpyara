@@ -33,12 +33,16 @@ def prepare_images(extracted_archive_path: Path, raw_images_path: Path):
 	# Check for multipartitions
 	extracted_archive_tempdir_files_list = list(get_recursive_files_list(extracted_archive_path, True, True))
 	for pattern, func in MULTIPARTITIONS.items():
-		match = fnmatch.filter(extracted_archive_tempdir_files_list, pattern)
-		if not match:
-			LOGI(f"Pattern {pattern} not found")
+		matches = [
+			file for file in extracted_archive_tempdir_files_list
+			if pattern.match(file)
+		]
+
+		if not matches:
+			LOGI(f"Pattern {pattern.pattern} not found")
 			continue
 
-		for file in match:
+		for file in matches:
 			multipart_image = extracted_archive_path / file
 			LOGI(f"Found multipartition image: {multipart_image.name}")
 			func(multipart_image, raw_images_path)
