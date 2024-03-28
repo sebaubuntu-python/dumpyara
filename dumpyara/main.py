@@ -8,6 +8,7 @@ from argparse import ArgumentParser
 from dumpyara import __version__ as version, current_path
 from dumpyara.dumpyara import dumpyara
 from dumpyara.utils.logging import setup_logging
+from dumpyara.utils.shutil import setup_shutil_formats
 from pathlib import Path
 from sebaubuntu_libs.liblocale import setup_locale
 
@@ -32,6 +33,8 @@ def main():
 	setup_locale()
 
 	setup_logging(args.debug)
+
+	setup_shutil_formats()
 
 	output = current_path / args.file.stem
 	if args.output:
