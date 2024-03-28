@@ -16,7 +16,7 @@ from sebaubuntu_libs.liblogging import LOGI
 from dumpyara.utils.files import get_recursive_files_list
 from dumpyara.utils.multipartitions import MULTIPARTITIONS
 from dumpyara.utils.partitions import (
-    correct_ab_filenames,
+	correct_ab_filenames,
 	fix_aliases,
 	prepare_raw_images,
 )
@@ -26,7 +26,8 @@ def prepare_images(extracted_archive_path: Path, raw_images_path: Path):
 	"""
 	Convert the archive files to raw images ready to be extracted.
 	"""
-    # Check for sparsed images
+
+	# Check for sparsed images
 	prepare_sparsed_images(extracted_archive_path)
 
 	# Check for multipartitions
