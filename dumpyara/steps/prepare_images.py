@@ -9,7 +9,6 @@ Step 2.
 This step will convert the archive files to raw images ready to be extracted.
 """
 
-import fnmatch
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 
@@ -30,12 +29,15 @@ def prepare_images(extracted_archive_path: Path, raw_images_path: Path):
 	# Check for sparsed images
 	prepare_sparsed_images(extracted_archive_path)
 
+	# Check for partitions
+	prepare_raw_images(extracted_archive_path, raw_images_path)
+
 	# Check for multipartitions
-	extracted_archive_tempdir_files_list = list(get_recursive_files_list(extracted_archive_path, True, True))
+	extracted_archive_tempdir_files_list = list(get_recursive_files_list(extracted_archive_path, True))
 	for pattern, func in MULTIPARTITIONS.items():
 		matches = [
 			file for file in extracted_archive_tempdir_files_list
-			if pattern.match(file)
+			if pattern.match(str(file))
 		]
 
 		if not matches:
@@ -47,7 +49,7 @@ def prepare_images(extracted_archive_path: Path, raw_images_path: Path):
 			LOGI(f"Found multipartition image: {multipart_image.name}")
 			func(multipart_image, raw_images_path)
 
-	# Check for partitions
+	# Check for partitions again, in case of multipartitions
 	prepare_raw_images(extracted_archive_path, raw_images_path)
 
 	# Fix slotted filenames if needed

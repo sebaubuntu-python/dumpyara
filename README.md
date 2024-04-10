@@ -21,6 +21,8 @@ python3 -m dumpyara <path to OTA file>
 
 ### Step 1 - Archives
 -   All the ones supported by shutil's extract_archive
+-   Samsung's `.tar.md5` archives
+-   Nested archives
 
 ### Step 2 - What's inside the archive
 -   A-only OTAs (Brotli and/or sdat compressed)
@@ -29,6 +31,7 @@ python3 -m dumpyara <path to OTA file>
 -   payload.bin
 -   Raw images (e.g. Xiaomi fastboot packages)
 -   Sparse images
+-   LZ4 images
 
 ### Step 3 - Partition images
 -   Android boot images

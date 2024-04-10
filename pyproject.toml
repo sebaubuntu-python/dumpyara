@@ -17,6 +17,7 @@ protobuf = ">=4.22.1,<6.0.0"
 sebaubuntu-libs = "^1.4.2"
 liblp = "^1.0.2"
 py7zr = "^0.21.0"
+lz4 = "^4.3.3"
 
 [tool.poetry.dev-dependencies]
 
