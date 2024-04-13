@@ -7,10 +7,10 @@
 from argparse import ArgumentParser
 from dumpyara import __version__ as version, current_path
 from dumpyara.dumpyara import dumpyara
-from dumpyara.utils.logging import setup_logging
 from dumpyara.utils.shutil import setup_shutil_formats
 from pathlib import Path
 from sebaubuntu_libs.liblocale import setup_locale
+from sebaubuntu_libs.liblogging import setup_logging
 
 def main():
 	print(f"Dumpyara\n"
