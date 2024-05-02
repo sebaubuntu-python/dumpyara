@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: GPL-3.0
 #
 
-from distutils.dir_util import copy_tree
 from pathlib import Path
+from sebaubuntu_libs.libcompat.distutils.dir_util import copy_tree
 from sebaubuntu_libs.libaik import AIKManager
 
 def extract_bootimg(file: Path, output_path: Path):
