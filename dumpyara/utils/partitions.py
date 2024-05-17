@@ -59,6 +59,7 @@ PARTITIONS = {
 	"cust": FILESYSTEM,
 	"factory": FILESYSTEM,
 	"india": FILESYSTEM,
+	"mi_ext": FILESYSTEM,
 	"modem": FILESYSTEM,
 	"my_bigball": FILESYSTEM,
 	"my_carrier": FILESYSTEM,
