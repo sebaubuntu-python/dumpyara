@@ -36,6 +36,6 @@ MULTIPARTITIONS: Dict[Pattern[str], Callable[[Path, Path], None]] = {
 	compile(key): value
 	for key, value in {
 		"payload.bin": extract_payload,
-		"super(?!.*(_empty)).*\\.img": extract_super,
+		"super(?!.*(_empty)).*\\.img(?!(\\.lz4))": extract_super,
 	}.items()
 }
