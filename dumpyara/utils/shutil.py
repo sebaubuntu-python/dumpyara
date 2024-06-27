@@ -8,6 +8,7 @@ from py7zr import unpack_7zarchive
 import shutil
 
 from dumpyara.lib.libsevenzip import unpack_sevenzip
+from dumpyara.lib.libkdz import unpack_kdz, unpack_dz
 
 def unpack_tar_md5(filename: str, work_dir: str):
 	"""
@@ -31,3 +32,9 @@ def setup_shutil_formats():
 		],
 		unpack_sevenzip
 	)
+
+	# kdz archive
+	shutil.register_unpack_format('kdz', ['.kdz'], unpack_kdz)
+
+	# dz archive
+	shutil.register_unpack_format('dz', ['.dz'], unpack_dz)
