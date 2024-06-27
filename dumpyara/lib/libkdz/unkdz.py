@@ -95,8 +95,10 @@ class KDZFileTools(kdz.KDZFile):
 			# Read the current KDZ header
 			kdz_sub = self.readKDZHeader()
 
-			# Add it to our list
-			self.partitions.append(kdz_sub)
+			# Make sure the partition length isn't 0
+			if kdz_sub['length'] != 0:
+				# Add it to our list
+				self.partitions.append(kdz_sub)
 
 			# Update start of data, if needed
 			if kdz_sub['offset'] < self.dataStart:
@@ -121,10 +123,11 @@ class KDZFileTools(kdz.KDZFile):
 		self.headerEnd = self.infile.tell()
 
 		# Paranoia check for an updated file format
-		buf = self.infile.read(self.dataStart - self.headerEnd - 1)
-		if len(buf.lstrip(b'\x00')) > 0:
-			print("[!] Warning: Data between headers and payload! (offsets {:d} to {:d})".format(self.headerEnd, self.dataStart), file=sys.stderr)
-			self.hasExtra = True
+		if not (self.dataStart - self.headerEnd - 1) < 0:
+			buf = self.infile.read(self.dataStart - self.headerEnd - 1)
+			if len(buf.lstrip(b'\x00')) > 0:
+				print("[!] Warning: Data between headers and payload! (offsets {:d} to {:d})".format(self.headerEnd, self.dataStart), file=sys.stderr)
+				self.hasExtra = True
 
 		# Make partition list
 		return [(x['name'],x['length']) for x in self.partitions]
