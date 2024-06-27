@@ -19,7 +19,6 @@ Copyright (C) 2013 IOMonster (thecubed on XDA)
 """
 
 from __future__ import absolute_import
-from __future__ import print_function
 import os
 import sys
 import io
@@ -31,6 +30,7 @@ from binascii import crc32, b2a_hex
 from uuid import UUID
 
 from dumpyara.lib.libkdz import dz, gpt
+from sebaubuntu_libs.liblogging import LOGD
 
 class UNDZUtils(object):
         """
@@ -57,7 +57,7 @@ class UNDZUtils(object):
 
                 # Verify DZ area header
                 if dz_item == None:
-                        print("[!] Bad DZ {:s} header!".format(self._dz_area), file=sys.stderr)
+                        LOGD("[!] Bad DZ {:s} header!".format(self._dz_area))
                         sys.exit(1)
 
 
@@ -70,19 +70,19 @@ class UNDZUtils(object):
                         if type(dz_item[key]) is str or type(dz_item[key]) is bytes:
                                 dz_item[key] = dz_item[key].rstrip(b'\x00')
                                 if b'\x00' in dz_item[key]:
-                                        print("[!] Warning: extraneous data found IN "+key, file=sys.stderr)
+                                        LOGD("[!] Warning: extraneous data found IN "+key)
                                         #sys.exit(1)
                         elif type(dz_item[key]) is int:
                                 if dz_item[key] != 0:
-                                        print('[!] Error: Value supposed to be zero in field "'+key+'" is non-zero ('+hex(dz_item[key])+')', file=sys.stderr)
+                                        LOGD('[!] Error: Value supposed to be zero in field "'+key+'" is non-zero ('+hex(dz_item[key])+')')
                                         sys.exit(1)
                         else:
-                                print("[!] Error: internal error", file=sys.stderr)
+                                LOGD("[!] Error: internal error")
                                 sys.exit(-1)
 
                 # To my knowledge this is supposed to be blank (for now...)
                 if len(dz_item['pad']) != 0:
-                        print("[!] Warning: pad is not empty", file=sys.stderr)
+                        LOGD("[!] Warning: pad is not empty")
 
                 return dz_item
 
@@ -155,9 +155,9 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                 """
                 Write our messages to file
                 """
-                # Print our messages
+                # LOGD our messages
                 for m in self.messages:
-                        print(m, file=file)
+                        LOGD(m, file=file)
 
 
         def display(self, sliceIdx, selfIdx):
@@ -166,9 +166,9 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                 """
                 
                 if cmd.batchMode:
-                    print("{:d}:{:s}:data".format(sliceIdx,self.sliceName.decode("utf8")))
+                    LOGD("{:d}:{:s}:data".format(sliceIdx,self.sliceName.decode("utf8")))
                 else:
-                    print("{:2d}/{:2d} : {:s} ({:d} bytes)".format(sliceIdx, selfIdx, self.chunkName.decode("utf8"), self.dataSize))
+                    LOGD("{:2d}/{:2d} : {:s} ({:d} bytes)".format(sliceIdx, selfIdx, self.chunkName.decode("utf8"), self.dataSize))
                 self.Messages()
                 return ++selfIdx
 
@@ -217,14 +217,14 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                 crc = crc32(buf) & 0xFFFFFFFF
 
                 #if crc != self.crc32:
-        ##              print("[!] Error: CRC32 of data doesn't match header ({:08X} vs {:08X})".format(crc, self.crc32), file=sys.stderr)
+        ##              LOGD("[!] Error: CRC32 of data doesn't match header ({:08X} vs {:08X})".format(crc, self.crc32))
         #               sys.exit(1)
 
                 md5 = hashlib.md5()
                 md5.update(buf)
 
                 if md5.digest() != self.md5:
-                        print("[!] Error: MD5 of data doesn't match header ({:32s} vs {:32s})".format(md5.hexdigest(), b2a_hex(self.md5)), file=sys.stderr)
+                        LOGD("[!] Error: MD5 of data doesn't match header ({:32s} vs {:32s})".format(md5.hexdigest(), b2a_hex(self.md5)))
                         sys.exit(1)
 
                 return buf
@@ -247,7 +247,7 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                 """
 
                 if name:
-                        print("[+] Extracting {:s} to {:s}".format(self.chunkName.decode("utf8"), name))
+                        LOGD("[+] Extracting {:s} to {:s}".format(self.chunkName.decode("utf8"), name))
 
                 # Create a hole at the end of the wipe area
                 if file:
@@ -264,7 +264,7 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                 # Write it to file
                 file.write(self.extract())
 
-                # Print our messages
+                # LOGD our messages
                 self.Messages()
 
         def extractChunkfile(self, file, name):
@@ -272,13 +272,13 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                 Extract the raw data of our chunk into the file with the name
                 """
 
-                print("[+] Extracting {:s} to {:s}".format(self.chunkName.decode("utf8"), name))
+                LOGD("[+] Extracting {:s} to {:s}".format(self.chunkName.decode("utf8"), name))
 
                 self.dz.dzfile.seek(self.dataOffset-self._dz_length, io.SEEK_SET)
                 buffer = self.dz.dzfile.read(self.dataSize + self._dz_length)
                 file.write(buffer)
 
-                # Print our messages
+                # LOGD our messages
                 self.Messages()
 
         def __init__(self, dz, file):
@@ -356,7 +356,7 @@ class UNDZSlice(object):
                 offset = chunk.getTargetStart()
                 # if it is at the start...
                 if offset < self.start:
-                        print("[!] Warning: Chunk is part of \"{:s}\", but starts in front of slice?!".format(self.name), file=sys.stderr)
+                        LOGD("[!] Warning: Chunk is part of \"{:s}\", but starts in front of slice?!".format(self.name))
 
                 self.chunks.append(chunk)
 
@@ -395,10 +395,10 @@ class UNDZSlice(object):
                                 chunkIdx = None
                                 sliceIdx = -1
                         if cmd.batchMode:
-                            print("{:2d}:{:s}:empty".format(sliceIdx,self.name))
+                            LOGD("{:2d}:{:s}:empty".format(sliceIdx,self.name))
                             # elif sliceIdx != -1:
                         else:
-                            print("{:2d}/?? : {:s} (<empty>)".format(sliceIdx, self.name))
+                            LOGD("{:2d}/?? : {:s} (<empty>)".format(sliceIdx, self.name))
                 for chunk in self.chunks:
                         chunk.display(sliceIdx,chunkIdx)
                         chunkIdx+=1
@@ -515,7 +515,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
                 try:
                         self.dzfile = io.open(name, "rb")
                 except IOError as err:
-                        print(err, file=sys.stderr)
+                        LOGD(err)
                         sys.exit(1)
 
                 # Get length of whole file
@@ -529,24 +529,24 @@ class UNDZFile(dz.DZFile, UNDZUtils):
                 # Save the full header for rebuilding the file later
                 self.header = dz_file['buffer']
 
-                #print(dz_file['version'])
-                #print(dz_file['buildType'])
-                #print(dz_file['oldDateCode'])
-                #print(dz_file['chunkCount'])
-                #print(dz_file['md5'])
-                #print(dz_file['unknown0'])
-                #print(dz_file['reserved1'])
-                #print(dz_file['reserved4'])
-                #print(dz_file['unknown1'])
-                #print(dz_file['unknown2'])
-                #print(self.header)
+                #LOGD(dz_file['version'])
+                #LOGD(dz_file['buildType'])
+                #LOGD(dz_file['oldDateCode'])
+                #LOGD(dz_file['chunkCount'])
+                #LOGD(dz_file['md5'])
+                #LOGD(dz_file['unknown0'])
+                #LOGD(dz_file['reserved1'])
+                #LOGD(dz_file['reserved4'])
+                #LOGD(dz_file['unknown1'])
+                #LOGD(dz_file['unknown2'])
+                #LOGD(self.header)
 
                 # Appears to be version numbers for the format
                 if dz_file['formatMajor'] > 2:
-                        print("[!] Error: DZ format version too high! (please report)", file=sys.stderr)
+                        LOGD("[!] Error: DZ format version too high! (please report)")
                         sys.exit(1)
                 elif dz_file['formatMinor'] > 1:
-                        print("[!] Warning: DZ format more recent than previous versions, output unreliable", file=sys.stderr)
+                        LOGD("[!] Warning: DZ format more recent than previous versions, output unreliable")
 
 
                 self.chunkCount = dz_file['chunkCount']
@@ -618,7 +618,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
 
                 # If I'm perverse enough to think of this...
                 if disorder > 0:
-                        print("[ ] Warning: Found {:d} out of order chunks (please report)".format(disorder), file=sys.stderr)
+                        LOGD("[ ] Warning: Found {:d} out of order chunks (please report)".format(disorder))
 
                 # They're in the order to write, not block order though
                 self.chunks.sort(key=lambda c: (c.getTargetStart() + (c.getDev()<<48)))
@@ -651,7 +651,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
 
                         for i in range(len(g.slices)):
                                 if next != g.slices[i].startLBA:
-                                        print("[!] Unallocated space found. Slice, Start, Size, End: " + str(next) + " " + str((g.slices[i].startLBA - next)<<self.shiftLBA), next<<self.shiftLBA, (g.slices[i].startLBA-1)<<self.shiftLBA)
+                                        LOGD(f"[!] Unallocated space found. Slice, Start, Size, End: {str(next)}, {str((g.slices[i].startLBA - next)<<self.shiftLBA)}, {next<<self.shiftLBA}, {(g.slices[i].startLBA-1)<<self.shiftLBA}")
                                         emptycount += 1
                                 next = g.slices[i].endLBA+1
 
@@ -666,7 +666,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
                         self.sliceIdx[self.chunks[-1].getSliceName()] = slice
 
                 except gpt.NoGPT as err:
-                        print("[!] Unable to find GPT in DZ file: {:s}".format(err))
+                        LOGD("[!] Unable to find GPT in DZ file: {:s}".format(err))
                         pass
 
                 for chunk in self.chunks:
@@ -679,14 +679,14 @@ class UNDZFile(dz.DZFile, UNDZUtils):
 
                 # This does look like a count of chunks
                 if len(self.chunks) != self.chunkCount:
-                        print("[!] Error: chunks in header differs from chunks found (please report)", file=sys.stderr)
+                        LOGD("[!] Error: chunks in header differs from chunks found (please report)")
                         sys.exit(-1)
 
                 # Checking this field for what is expected
                 md5Headers = self.md5Headers.digest()
 
                 if md5Headers != self.md5:
-                        print("[!] Error: MD5 of chunk headers doesn't match header ({:32s} vs {:32s})".format(self.md5Headers.hexdigest(), b2a_hex(self.md5)), file=sys.stderr)
+                        LOGD("[!] Error: MD5 of chunk headers doesn't match header ({:32s} vs {:32s})".format(self.md5Headers.hexdigest(), b2a_hex(self.md5)))
                         sys.exit(-1)
 
 
@@ -759,7 +759,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
                                 sliceIdx+=1
 
                 for m in self.messages:
-                        print(m)
+                        LOGD(m)
 
         def getChunkCount(self):
                 """
@@ -935,26 +935,26 @@ class DZFileTools:
 
         def cmdListPartitions(self):
             if not cmd.batchMode:
-                print("[+] DZ Partition List\n=========================================")
+                LOGD("[+] DZ Partition List\n=========================================")
             self.dz_file.display()
 
         def cmdExtractChunk(self, files):
                 if len(files) == 0:
-                        print("[+] Extracting all chunks!\n")
+                        LOGD("[+] Extracting all chunks!\n")
                         files = range(0, self.dz_file.getChunkCount())
                 elif len(files) == 1:
-                        print("[+] Extracting single chunk!\n")
+                        LOGD("[+] Extracting single chunk!\n")
                 else:
-                        print("[+] Extracting {:d} chunks!\n".format(len(files)))
+                        LOGD("[+] Extracting {:d} chunks!\n".format(len(files)))
 
                 for idx in files:
                         try:
                                 idx = int(idx)
                         except ValueError:
-                                print('[!] Bad value "{:s}" (must be number)'.format(idx), file=sys.stderr)
+                                LOGD('[!] Bad value "{:s}" (must be number)'.format(idx))
                                 sys.exit(1)
                         if idx < 0 or idx >= self.dz_file.getChunkCount():
-                                print("[!] Cannot extract out of range chunk {:d} (min=0 max={:d})".format(idx, self.dz_file.getChunkCount()-1), file=sys.stderr)
+                                LOGD("[!] Cannot extract out of range chunk {:d} (min=0 max={:d})".format(idx, self.dz_file.getChunkCount()-1))
                                 sys.exit(1)
                         name = self.dz_file.getChunkName(idx)
                         file = io.FileIO(name, "wb")
@@ -963,21 +963,21 @@ class DZFileTools:
 
         def cmdExtractChunkfile(self, files):
                 if len(files) == 0:
-                        print("[+] Extracting all chunkfiles!\n")
+                        LOGD("[+] Extracting all chunkfiles!\n")
                         files = range(0, self.dz_file.getChunkCount())
                 elif len(files) == 1:
-                        print("[+] Extracting single chunkfile!\n")
+                        LOGD("[+] Extracting single chunkfile!\n")
                 else:
-                        print("[+] Extracting {:d} chunkfiles!\n".format(len(files)))
+                        LOGD("[+] Extracting {:d} chunkfiles!\n".format(len(files)))
 
                 for idx in files:
                         try:
                                 idx = int(idx)
                         except ValueError:
-                                print('[!] Bad value "{:s}" (must be number)'.format(idx), file=sys.stderr)
+                                LOGD('[!] Bad value "{:s}" (must be number)'.format(idx))
                                 sys.exit(1)
                         if idx < 0 or idx >= self.dz_file.getChunkCount():
-                                print("[!] Cannot extract out of range chunkfile {:d} (min=0 max={:d})".format(idx, self.dz_file.getChunkCount()-1), file=sys.stderr)
+                                LOGD("[!] Cannot extract out of range chunkfile {:d} (min=0 max={:d})".format(idx, self.dz_file.getChunkCount()-1))
                                 sys.exit(1)
                         name = self.dz_file.getChunkName(idx) + ".chunk"
                         file = io.open(name, "wb")
@@ -986,21 +986,21 @@ class DZFileTools:
 
         def cmdExtractSlice(self, files):
                 if len(files) == 0:
-                        print("[+] Extracting all slices/partitions\n")
+                        LOGD("[+] Extracting all slices/partitions\n")
                         files = range(0, self.dz_file.getSlice(-1).getIndex()+1)
                 elif len(files) == 1:
-                        print("[+] Extracting single slice / partition!\n")
+                        LOGD("[+] Extracting single slice / partition!\n")
                 else:
-                        print("[+] Extracting {:d} slices^Wpartitions!\n".format(len(files)))
+                        LOGD("[+] Extracting {:d} slices^Wpartitions!\n".format(len(files)))
 
                 for idx in files:
                         try:
                                 idx = int(idx)
                         except ValueError:
-                                print('[!] Bad value "{:s}" (must be number)'.format(idx), file=sys.stderr)
+                                LOGD('[!] Bad value "{:s}" (must be number)'.format(idx))
                                 sys.exit(1)
                         if idx < 0 or idx > self.dz_file.getSlice(-1).getIndex():
-                                print("[!] Cannot extract out of range slice {:d} (min=0 max={:d})".format(idx, self.dz_file.getSlice(-1).getIndex()), file=sys.stderr)
+                                LOGD("[!] Cannot extract out of range slice {:d} (min=0 max={:d})".format(idx, self.dz_file.getSlice(-1).getIndex()))
                                 sys.exit(1)
 
                         cur = idx
@@ -1019,7 +1019,7 @@ class DZFileTools:
 
         def cmdExtractImage(self, files):
                 if len(files) > 0:
-                        print("[!] Cannot specify specific portions to extract when outputting image", file=sys.stderr)
+                        LOGD("[!] Cannot specify specific portions to extract when outputting image")
                         sys.exit(1)
                 name = "image.img"
                 try:

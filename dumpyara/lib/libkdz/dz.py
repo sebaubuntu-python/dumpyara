@@ -24,6 +24,7 @@ import sys
 from struct import Struct
 from collections import OrderedDict
 
+from sebaubuntu_libs.liblogging import LOGD
 
 class DZStruct(object):
 	"""
@@ -48,7 +49,7 @@ class DZStruct(object):
 
 			# Sanity check
 			if self._dz_struct.size != self._dz_length:
-				print("[!] Internal error!  Chunk format wrong! (computed={:d}, specified={:d})".format(self._dz_struct.size, self._dz_length), file=sys.stderr)
+				LOGD("[!] Internal error!  Chunk format wrong! (computed={:d}, specified={:d})".format(self._dz_struct.size, self._dz_length))
 				sys.exit(-1)
 
 		# Generate list of items that can be collapsed (truncated)
