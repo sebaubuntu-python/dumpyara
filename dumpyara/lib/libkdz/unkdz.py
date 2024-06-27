@@ -19,14 +19,13 @@ Copyright (C) 2013 IOMonster (thecubed on XDA)
 """
 
 from __future__ import absolute_import
-from __future__ import print_function
 import os
 import argparse
 import sys
 from binascii import b2a_hex
 
 from dumpyara.lib.libkdz import kdz
-
+from sebaubuntu_libs.liblogging import LOGD
 
 class KDZFileTools(kdz.KDZFile):
 	"""
@@ -68,14 +67,14 @@ class KDZFileTools(kdz.KDZFile):
 			if type(kdz_item[key]) is str or type(kdz_item[key]) is bytes:
 				kdz_item[key] = kdz_item[key].rstrip(b'\x00')
 				if b'\x00' in kdz_item[key]:
-					print("[!] Warning: extraneous data found IN "+key, file=sys.stderr)
+					LOGD("[!] Warning: extraneous data found IN "+key)
 					#sys.exit(1)
 			elif type(kdz_item[key]) is int:
 				if kdz_item[key] != 0:
-					print('[!] Error: field "'+key+'" is non-zero ('+b2a_hex(kdz_item[key])+')', file=sys.stderr)
+					LOGD('[!] Error: field "'+key+'" is non-zero ('+b2a_hex(kdz_item[key])+')')
 					sys.exit(1)
 			else:
-				print("[!] Error: internal error", file=sys.stderr)
+				LOGD("[!] Error: internal error")
 				sys.exit(-1)
 
 		return kdz_item
@@ -126,7 +125,7 @@ class KDZFileTools(kdz.KDZFile):
 		if not (self.dataStart - self.headerEnd - 1) < 0:
 			buf = self.infile.read(self.dataStart - self.headerEnd - 1)
 			if len(buf.lstrip(b'\x00')) > 0:
-				print("[!] Warning: Data between headers and payload! (offsets {:d} to {:d})".format(self.headerEnd, self.dataStart), file=sys.stderr)
+				LOGD("[!] Warning: Data between headers and payload! (offsets {:d} to {:d})".format(self.headerEnd, self.dataStart))
 				self.hasExtra = True
 
 		# Make partition list
@@ -185,7 +184,7 @@ class KDZFileTools(kdz.KDZFile):
 
 		extra = open(filename, "wb")
 
-		print("[+] Extracting extra data to " + filename)
+		LOGD("[+] Extracting extra data to " + filename)
 
 		self.infile.seek(self.headerEnd, os.SEEK_SET)
 
@@ -247,7 +246,7 @@ class KDZFileTools(kdz.KDZFile):
 		try:
 			self.infile = open(kdzfile, "rb")
 		except IOError as err:
-			print(err, file=sys.stderr)
+			LOGD(err)
 			sys.exit(1)
 
 		# Get length of whole file
@@ -260,30 +259,30 @@ class KDZFileTools(kdz.KDZFile):
 		verify_header = self.infile.read(8)
 
 		if verify_header not in self.kdz_header:
-			print("[!] Error: Unsupported KDZ file format.")
-			print('[ ] Received header "{:s}".'.format(" ".join(b2a_hex(n) for n in verify_header)))
+			LOGD("[!] Error: Unsupported KDZ file format.")
+			LOGD('[ ] Received header "{:s}".'.format(" ".join(b2a_hex(n) for n in verify_header)))
 			sys.exit(1)
 
 		self.header_type = self.kdz_header[verify_header]
 
 
 	def cmdExtractSingle(self, partID):
-		print("[+] Extracting single partition from v{:d} file!\n".format(self.header_type))
-		print("[+] Extracting " + str(self.partList[partID][0]) + " to " + os.path.join(self.outdir,self.partList[partID][0].decode("utf8")))
+		LOGD("[+] Extracting single partition from v{:d} file!\n".format(self.header_type))
+		LOGD("[+] Extracting " + str(self.partList[partID][0]) + " to " + os.path.join(self.outdir,self.partList[partID][0].decode("utf8")))
 		self.extractPartition(partID)
 
 	def cmdExtractAll(self):
-		print("[+] Extracting all partitions from v{:d} file!\n".format(self.header_type))
+		LOGD("[+] Extracting all partitions from v{:d} file!\n".format(self.header_type))
 		for part in enumerate(self.partList):
-			print("[+] Extracting " + part[1][0].decode("utf8") + " to " + os.path.join(self.outdir,part[1][0].decode("utf8")))
+			LOGD("[+] Extracting " + part[1][0].decode("utf8") + " to " + os.path.join(self.outdir,part[1][0].decode("utf8")))
 			self.extractPartition(part[0])
 		self.saveExtra()
 		self.saveParams()
 
 	def cmdListPartitions(self):
-		print("[+] KDZ Partition List (format v{:d})\n=========================================".format(self.header_type))
+		LOGD("[+] KDZ Partition List (format v{:d})\n=========================================".format(self.header_type))
 		for part in enumerate(self.partList):
-			print("{:2d} : {:s} ({:d} bytes)".format(part[0], part[1][0].decode("utf8"), part[1][1]))
+			LOGD("{:2d} : {:s} ({:d} bytes)".format(part[0], part[1][0].decode("utf8"), part[1][1]))
 
 	def main(self):
 		args = self.parseArgs()
@@ -301,7 +300,7 @@ class KDZFileTools(kdz.KDZFile):
 			if args.extractID >= 0 and args.extractID < len(self.partList):
 				self.cmdExtractSingle(args.extractID)
 			else:
-				print("[!] Segment {:d} is out of range!".format(args.extractID), file=sys.stderr)
+				LOGD("[!] Segment {:d} is out of range!".format(args.extractID))
 
 		elif args.extractAll:
 			self.cmdExtractAll()
