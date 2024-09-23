@@ -18,6 +18,7 @@ sebaubuntu-libs = "^1.4.5"
 liblp = "^1.0.2"
 py7zr = ">=0.21,<0.23"
 lz4 = "^4.3.3"
+zstandard = "^0.23.0"
 
 [tool.poetry.dev-dependencies]
 
