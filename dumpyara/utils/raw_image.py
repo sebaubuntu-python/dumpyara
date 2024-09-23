@@ -47,9 +47,11 @@ def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
 
 	if lz4_image.is_file():
 		LOGI(f"Decompressing {lz4_image.name} as LZ4 image")
-		with LZ4FrameFile(lz4_image, mode="rb") as lz4_image:
+		with LZ4FrameFile(lz4_image, mode="rb") as lz4_frame_file:
 			with io.open(raw_image, "wb") as raw_image:
-				raw_image.write(lz4_image.read())
+				raw_image.write(lz4_frame_file.read())
+		
+		lz4_image.unlink()
 
 	for image_name in possible_image_names:
 		image_path = files_path / image_name
