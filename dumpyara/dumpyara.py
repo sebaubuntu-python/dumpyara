@@ -14,10 +14,11 @@ from dumpyara.steps.extract_archive import extract_archive
 from dumpyara.steps.extract_images import extract_images
 from dumpyara.steps.prepare_images import prepare_images
 
+# Package name to package commands
 REQUIRED_TOOLS = {
-	"7z": "p7zip",
-	"fsck.erofs": "erofs-utils",
-	"simg2img": "platform-tools",
+	"7-zip or p7zip": ["7zz", "p7zip"],
+	"erofs-utils": ["fsck.erofs"],
+	"android-sdk-libsparse-utils or platform-utils": ["simg2img"],
 }
 
 def dumpyara(file: Path, output_path: Path, debug: bool = False):
@@ -27,12 +28,16 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
 	extracted_archive_path = output_path / "temp_extracted_archive"
 	raw_images_path = output_path / "temp_raw_images"
 
-	# First, check the necessary tools are installed
-	for tool, package in REQUIRED_TOOLS.items():
-		if not which(tool):
-			raise RuntimeError(
-				f"You are missing {tool}, please install {package} from your distro's repositories"
-			)
+	# First, check if the necessary tools are installed
+	for package, tools in REQUIRED_TOOLS.items():
+		installed = any(which(tool) for tool in tools)
+
+		if installed:
+			continue
+
+		raise RuntimeError(
+			f"You are missing {tools[0]}, please install {package} from your distro's repositories"
+		)
 
 	try:
 		# Make output and temporary directories
