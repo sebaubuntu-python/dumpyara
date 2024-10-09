@@ -9,6 +9,7 @@ from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
 from shutil import which
 
+from dumpyara.lib.libsevenzip import SEVEN_ZIP_EXECUTABLE, P7ZIP_EXECUTABLE
 from dumpyara.utils.files import get_recursive_files_list, rmtree_recursive
 from dumpyara.steps.extract_archive import extract_archive
 from dumpyara.steps.extract_images import extract_images
@@ -16,7 +17,7 @@ from dumpyara.steps.prepare_images import prepare_images
 
 # Package name to package commands
 REQUIRED_TOOLS = {
-	"7-zip or p7zip": ["7zz", "p7zip"],
+	"7-zip or p7zip": [SEVEN_ZIP_EXECUTABLE, P7ZIP_EXECUTABLE],
 	"erofs-utils": ["fsck.erofs"],
 	"android-sdk-libsparse-utils or platform-utils": ["simg2img"],
 }

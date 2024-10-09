@@ -16,7 +16,7 @@ from sebaubuntu_libs.liblogging import LOGD, LOGE, LOGI
 from shutil import copyfile
 from subprocess import CalledProcessError
 
-from dumpyara.lib.libsevenzip import sevenzip
+from dumpyara.lib.libsevenzip import unpack_sevenzip
 from dumpyara.utils.bootimg import extract_bootimg
 from dumpyara.utils.partitions import (
 	BOOTIMAGE, FILESYSTEM, RAW,
@@ -50,7 +50,7 @@ def extract_images(raw_images_path: Path, output_path: Path):
 			except CalledProcessError as e:
 				LOGD(f"Failed to extract {image_path.name} with erofs, trying 7z")
 				try:
-					sevenzip(f'x {image_path} -y -o"{output_path / partition}"/')
+					unpack_sevenzip(str(image_path), str(output_path / partition))
 				except CalledProcessError as e:
 					LOGE(f"Error extracting {image_path.name}")
 					LOGE(f"{e.output.decode('UTF-8', errors='ignore')}")

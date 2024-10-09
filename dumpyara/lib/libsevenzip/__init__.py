@@ -33,13 +33,13 @@ def get_sevenzip_command():
 def sevenzip(commands: List[str]):
 	return check_output(
 		[get_sevenzip_command(), *commands],
-		shell=True, stderr=STDOUT
+		stderr=STDOUT
 	)
 
 def unpack_sevenzip(filename: str, work_dir: str):
 	sevenzip_command = get_sevenzip_command()
 
-	args = ["x", filename, "-y", "-o", f"{work_dir}/"]
+	args = ["x", filename, "-y", f"-o{work_dir}/"]
 	if sevenzip_command == SEVEN_ZIP_EXECUTABLE:
 		# Enable dangerous symlinks extractions
 		args.append("-snld")
