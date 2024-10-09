@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dumpyara"
-version = "1.0.7"
+version = "1.0.8"
 description = "Android firmware extractor"
 authors = ["Sebastiano Barezzi <seba@sebaubuntu.dev>"]
 license = "GPL-3.0"
