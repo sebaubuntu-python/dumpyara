@@ -5,7 +5,11 @@
 #
 """fsck.erofs wrapper."""
 
+from pathlib import Path
 from subprocess import STDOUT, check_output
 
-def erofs(command: str):
-	return check_output(f"fsck.erofs {command}", shell=True, stderr=STDOUT)
+def extract_erofs(image: Path, output_dir: Path):
+	return check_output(
+		["fsck.erofs", f"--extract={output_dir}", f"{image}"],
+		stderr=STDOUT
+	)

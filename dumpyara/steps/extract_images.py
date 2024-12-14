@@ -10,7 +10,7 @@ This step will extract the raw images.
 """
 
 from pathlib import Path
-from dumpyara.lib.liberofs import erofs
+from dumpyara.lib.liberofs import extract_erofs
 from sebaubuntu_libs.libexception import format_exception
 from sebaubuntu_libs.liblogging import LOGD, LOGE, LOGI
 from shutil import copyfile
@@ -46,9 +46,10 @@ def extract_images(raw_images_path: Path, output_path: Path):
 				LOGE(f"{format_exception(e)}")
 		elif partition_type == FILESYSTEM:
 			try:
-				erofs(f'--extract="{output_path / partition}" {image_path}')
+				extract_erofs(image_path, output_path / partition)
 			except CalledProcessError as e:
 				LOGD(f"Failed to extract {image_path.name} with erofs, trying 7z")
+				LOGD(format_exception(e))
 				try:
 					unpack_sevenzip(str(image_path), str(output_path / partition))
 				except CalledProcessError as e:
