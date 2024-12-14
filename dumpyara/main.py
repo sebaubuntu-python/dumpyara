@@ -25,6 +25,9 @@ def main():
 						help="custom output folder")
 
 	# Optional arguments
+	parser.add_argument("-v", "--verbose", action='store_true',
+						help="enable verbose output")
+
 	parser.add_argument("-d", "--debug", action='store_true',
 						help="enable debugging features")
 
@@ -32,7 +35,7 @@ def main():
 
 	setup_locale()
 
-	setup_logging(args.debug)
+	setup_logging(args.debug or args.verbose)
 
 	setup_shutil_formats()
 
