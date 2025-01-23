@@ -23,6 +23,7 @@ python3 -m dumpyara <path to OTA file>
 -   All the ones supported by shutil's extract_archive
 -   Samsung's `.tar.md5` archives
 -   Nested archives
+-   LG's `.kdz` archives
 
 ### Step 2 - What's inside the archive
 -   A-only OTAs (Brotli and/or sdat compressed)
