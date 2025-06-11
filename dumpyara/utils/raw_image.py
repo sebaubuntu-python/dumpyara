@@ -47,9 +47,9 @@ def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
 
 	if lz4_image.is_file():
 		LOGI(f"Decompressing {lz4_image.name} as LZ4 image")
-		with LZ4FrameFile(lz4_image, mode="rb") as lz4_frame_file:
-			with io.open(raw_image, "wb") as raw_image:
-				raw_image.write(lz4_frame_file.read())
+		with LZ4FrameFile(lz4_image, mode="rb") as lz4_frame_file, open(raw_image, "wb") as raw_image_file:
+			while chunk := lz4_frame_file.read(8 * 1024 * 1024):
+				raw_image_file.write(chunk)
 		
 		lz4_image.unlink()
 
