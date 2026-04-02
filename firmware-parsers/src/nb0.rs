@@ -11,7 +11,7 @@ const ENTRY_SIZE: usize = 64;
 
 /// Check if a file looks like an NB0 container.
 /// Reads file_count from first 4 bytes; sanity checks that count is
-/// reasonable and the file is large enough to hold the partition table.
+/// reasonable, the file is large enough, and entry filenames are printable.
 /// `file_size` is the total size of the file on disk.
 pub fn probe(data: &[u8], file_size: u64) -> bool {
     if data.len() < 4 {
@@ -19,7 +19,29 @@ pub fn probe(data: &[u8], file_size: u64) -> bool {
     }
     let count = u32::from_le_bytes(data[0..4].try_into().unwrap()) as usize;
     // Sanity: count must be 1..255 and the file must be large enough for the header
-    count > 0 && count < 256 && file_size >= (4 + count * ENTRY_SIZE) as u64
+    if count == 0 || count >= 256 || file_size < (4 + count * ENTRY_SIZE) as u64 {
+        return false;
+    }
+
+    // Secondary validation: check that at least the first entry has a
+    // printable ASCII filename (NB0 has no magic bytes, so this reduces
+    // false positives on arbitrary binary files).
+    let min_required = 4 + ENTRY_SIZE;
+    if data.len() >= min_required {
+        let name_bytes = &data[4 + 16..4 + ENTRY_SIZE]; // filename field of first entry
+        let name_end = name_bytes.iter().position(|&b| b == 0).unwrap_or(name_bytes.len());
+        if name_end == 0 {
+            return false; // empty filename
+        }
+        let all_printable = name_bytes[..name_end]
+            .iter()
+            .all(|&b| b >= 0x20 && b <= 0x7E);
+        if !all_printable {
+            return false;
+        }
+    }
+
+    true
 }
 
 struct Nb0Entry {
@@ -76,10 +98,15 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
         f.seek(SeekFrom::Start(abs_offset))?;
 
         // Determine output filename — ensure it ends with .img
-        let out_name = if entry.filename.contains('.') {
-            entry.filename.clone()
+        // Sanitize: strip path components to prevent directory traversal
+        let safe_name = Path::new(&entry.filename)
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| format!("partition_{}", extracted.len()));
+        let out_name = if safe_name.contains('.') {
+            safe_name
         } else {
-            format!("{}.img", entry.filename)
+            format!("{safe_name}.img")
         };
         let out_path = output_dir.join(&out_name);
 

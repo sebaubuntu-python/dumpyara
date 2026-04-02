@@ -23,8 +23,12 @@ fn strip_header(data: &[u8]) -> Result<(usize, usize)> {
             );
         }
         Ok((offset, payload_size))
-    } else if data.len() > 0x4040 {
-        // BFBF or unknown: skip first 0x4040 bytes
+    } else if data.len() > 0x4040
+        && (data[0] == 0xBF && data[1] == 0xBF
+            || data[0] == 0x88 && data[1] == 0x16  // known MTK header variant
+            || data[0..4] == [0x00, 0x00, 0x00, 0x00]) // null-padded MTK header
+    {
+        // BFBF or known MTK header variants: skip first 0x4040 bytes
         let offset = 0x4040;
         let payload_size = data.len() - offset;
         Ok((offset, payload_size))

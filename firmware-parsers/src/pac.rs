@@ -85,14 +85,16 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
             continue;
         }
 
-        // Determine output filename
-        let out_name = if entry.filename.ends_with(".img") {
-            entry.filename.clone()
-        } else if entry.name.is_empty() {
+        // Determine output filename — sanitize path to prevent traversal
+        let raw_name = if entry.filename.ends_with(".img") || entry.name.is_empty() {
             entry.filename.clone()
         } else {
             format!("{}.img", entry.name)
         };
+        let out_name = Path::new(&raw_name)
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| format!("partition_{}.img", extracted.len()));
         let out_path = output_dir.join(&out_name);
 
         f.seek(SeekFrom::Start(entry.offset))?;
