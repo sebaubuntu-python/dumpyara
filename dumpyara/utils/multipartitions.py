@@ -13,6 +13,13 @@ from subprocess import STDOUT, check_output
 
 from dumpyara.lib.libpayload import extract_android_ota_payload
 
+try:
+    import firmware_parsers
+
+    _HAS_FIRMWARE_PARSERS = True
+except ImportError:
+    _HAS_FIRMWARE_PARSERS = False
+
 
 def extract_payload(image: Path, output_dir: Path):
     extract_android_ota_payload(image, output_dir)
@@ -22,9 +29,10 @@ def extract_super(image: Path, output_dir: Path):
     unsparsed_super = output_dir / "super.unsparsed.img"
 
     try:
-        check_output(
-            ["simg2img", image, unsparsed_super], stderr=STDOUT
-        )  # TODO: Rewrite libsparse...
+        if _HAS_FIRMWARE_PARSERS:
+            firmware_parsers.sparse_to_raw(str(image), str(unsparsed_super))
+        else:
+            check_output(["simg2img", image, unsparsed_super], stderr=STDOUT)
     except Exception:
         LOGI(f"Failed to unsparse {image.name}")
     else:

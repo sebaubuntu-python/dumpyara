@@ -1,0 +1,42 @@
+[package]
+name = "firmware-parsers"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "firmware_parsers"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3       = { version = "0.22", features = ["extension-module"] }
+anyhow     = "1"
+thiserror  = "1"
+
+# Crypto
+aes        = "0.8"
+cipher     = "0.4"
+hex-literal = "0.4"
+
+# Compression
+flate2     = "1"
+tar        = "0.4"
+zip        = "2"
+
+# Binary parsing
+memmap2    = "0.9"
+bytemuck   = { version = "1", features = ["derive"] }
+byteorder  = "1"
+
+# XML (QFIL)
+quick-xml  = { version = "0.37", features = ["serialize"] }
+serde      = { version = "1", features = ["derive"] }
+
+# String handling
+encoding_rs = "0.8"
+regex       = "1"
+
+# Sparse images
+android-sparse = "0.6"
+
+[dev-dependencies]
+tempfile   = "3"

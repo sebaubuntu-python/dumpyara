@@ -12,6 +12,13 @@ from sebaubuntu_libs.liblogging import LOGD, LOGI
 from shutil import copyfile, move
 from subprocess import STDOUT, check_output
 
+try:
+    import firmware_parsers
+
+    _HAS_FIRMWARE_PARSERS = True
+except ImportError:
+    _HAS_FIRMWARE_PARSERS = False
+
 
 def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
     """
@@ -59,9 +66,12 @@ def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
             continue
 
         try:
-            check_output(
-                ["simg2img", image_path, unsparsed_image], stderr=STDOUT
-            )  # TODO: Rewrite libsparse...
+            if _HAS_FIRMWARE_PARSERS:
+                firmware_parsers.sparse_to_raw(
+                    str(image_path), str(unsparsed_image)
+                )
+            else:
+                check_output(["simg2img", image_path, unsparsed_image], stderr=STDOUT)
         except Exception:
             LOGD(f"Failed to unsparse {image_path.name}, should be a raw image")
             pass

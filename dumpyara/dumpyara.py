@@ -14,12 +14,21 @@ from dumpyara.steps.extract_archive import extract_archive
 from dumpyara.steps.extract_images import extract_images
 from dumpyara.steps.prepare_images import prepare_images
 
+try:
+    import firmware_parsers
+
+    _HAS_FIRMWARE_PARSERS = True
+except ImportError:
+    _HAS_FIRMWARE_PARSERS = False
+
 # Package name to package commands
 REQUIRED_TOOLS = {
     "7-zip or p7zip": [SEVEN_ZIP_EXECUTABLE, P7ZIP_EXECUTABLE],
     "erofs-utils": ["fsck.erofs"],
-    "android-sdk-libsparse-utils or platform-utils": ["simg2img"],
 }
+
+if not _HAS_FIRMWARE_PARSERS:
+    REQUIRED_TOOLS["android-sdk-libsparse-utils or platform-utils"] = ["simg2img"]
 
 
 def dumpyara(file: Path, output_path: Path, debug: bool = False):
