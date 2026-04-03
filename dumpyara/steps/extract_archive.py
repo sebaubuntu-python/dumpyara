@@ -9,10 +9,12 @@ This step will extract the archive into a folder.
 """
 
 from pathlib import Path
+import re
 from re import Pattern, compile
 from shutil import unpack_archive
 from sebaubuntu_libs.liblogging import LOGD, LOGI
 from typing import Callable, Dict
+from zipfile import ZipFile, is_zipfile
 
 from dumpyara.utils.files import get_recursive_files_list
 
@@ -22,6 +24,28 @@ try:
     _HAS_FIRMWARE_PARSERS = True
 except ImportError:
     _HAS_FIRMWARE_PARSERS = False
+
+
+def _strip_vendor_prefix(directory: Path):
+    """Strip a shared vendor prefix from extracted filenames."""
+    files = [file for file in directory.iterdir() if file.is_file()]
+    if len(files) < 3:
+        return
+
+    prefix_pattern = re.compile(r"^[A-Z]{2,4}(?:-[A-Za-z0-9]{1,6}){2,4}-")
+    prefixed = {}
+    for file in files:
+        match = prefix_pattern.match(file.name)
+        if match:
+            new_name = file.name[match.end() :]
+            if new_name and not (directory / new_name).exists():
+                prefixed[file] = directory / new_name
+
+    # Avoid false positives by requiring a clear majority.
+    if len(prefixed) >= len(files) * 0.6:
+        for old, new in prefixed.items():
+            LOGD(f"Stripping vendor prefix: {old.name} → {new.name}")
+            old.rename(new)
 
 
 def extract_archive(archive_path: Path, extracted_archive_path: Path, is_nested: bool = False):
@@ -48,7 +72,16 @@ def extract_archive(archive_path: Path, extracted_archive_path: Path, is_nested:
             )
 
     # Extract the archive
-    unpack_archive(archive_path, extracted_archive_path)
+    try:
+        unpack_archive(archive_path, extracted_archive_path)
+    except Exception:
+        # Handle zip archives with non-standard extensions such as .ozip and .ftf.
+        if not is_zipfile(archive_path):
+            raise
+        LOGD(f"Falling back to zipfile for {archive_path.name}")
+        with ZipFile(archive_path, "r") as archive:
+            archive.extractall(extracted_archive_path)
+
     if is_nested:
         LOGD("Archive is nested, unlinking")
         archive_path.unlink()
@@ -76,6 +109,8 @@ def extract_archive(archive_path: Path, extracted_archive_path: Path, is_nested:
                         file.unlink()
             except Exception as error:
                 LOGD(f"firmware_parsers failed on {file.name}: {error}")
+
+    _strip_vendor_prefix(extracted_archive_path)
 
     # Check for nested archives
     extracted_archive_tempdir_files_list = list(
