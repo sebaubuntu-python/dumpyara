@@ -23,8 +23,7 @@ zip        = "2"
 bzip2      = "0.5"
 
 # XML (QFIL)
-quick-xml  = { version = "0.37", features = ["serialize"] }
-serde      = { version = "1", features = ["derive"] }
+quick-xml  = "0.37"
 
 # String handling
 encoding_rs = "0.8"

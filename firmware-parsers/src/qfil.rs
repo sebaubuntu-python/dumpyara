@@ -1,8 +1,8 @@
 use anyhow::{Context, Result};
 use pyo3::exceptions::PyIOError;
 use pyo3::prelude::*;
-use quick_xml::de::from_str;
-use serde::Deserialize;
+use quick_xml::events::Event;
+use quick_xml::Reader;
 use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::{Read, Seek, SeekFrom, Write};
@@ -10,28 +10,62 @@ use std::path::{Path, PathBuf};
 
 use crate::sparse;
 
-/// A single <program> entry from rawprogram*.xml.
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 struct Program {
-    #[serde(default)]
     filename: String,
-    #[serde(default)]
     label: String,
-    #[serde(default)]
     num_partition_sectors: u64,
-    #[serde(default)]
     start_sector: u64,
-    #[serde(default)]
     file_sector_offset: u64,
-    #[serde(default, rename = "SECTOR_SIZE_IN_BYTES")]
-    sector_size: Option<u64>,
+    sector_size: u64,
 }
 
-/// Root element wrapping <program> entries.
-#[derive(Debug, Deserialize)]
-struct Data {
-    #[serde(rename = "program", default)]
-    programs: Vec<Program>,
+/// Parse rawprogram XML manually to handle arbitrary attributes gracefully.
+fn parse_rawprogram_xml(xml: &str) -> Result<Vec<Program>> {
+    let mut reader = Reader::from_str(xml);
+    let mut programs = Vec::new();
+
+    loop {
+        match reader.read_event() {
+            Ok(Event::Empty(ref e)) | Ok(Event::Start(ref e)) => {
+                if e.name().as_ref() != b"program" {
+                    continue;
+                }
+                let mut prog = Program {
+                    filename: String::new(),
+                    label: String::new(),
+                    num_partition_sectors: 0,
+                    start_sector: 0,
+                    file_sector_offset: 0,
+                    sector_size: 512,
+                };
+                for attr in e.attributes().flatten() {
+                    let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                    let val = std::str::from_utf8(&attr.value).unwrap_or("");
+                    match key {
+                        "filename" => prog.filename = val.to_string(),
+                        "label" => prog.label = val.to_string(),
+                        "num_partition_sectors" => {
+                            prog.num_partition_sectors = val.parse().unwrap_or(0)
+                        }
+                        "start_sector" => prog.start_sector = val.parse().unwrap_or(0),
+                        "file_sector_offset" => {
+                            prog.file_sector_offset = val.parse().unwrap_or(0)
+                        }
+                        "SECTOR_SIZE_IN_BYTES" => {
+                            prog.sector_size = val.parse().unwrap_or(512)
+                        }
+                        _ => {} // ignore unknown attributes
+                    }
+                }
+                programs.push(prog);
+            }
+            Ok(Event::Eof) => break,
+            Err(e) => anyhow::bail!("XML parse error: {e}"),
+            _ => {}
+        }
+    }
+    Ok(programs)
 }
 
 /// Check if a zip archive contains rawprogram*.xml (QFIL format).
@@ -95,14 +129,14 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
     let xml_content = fs::read_to_string(&rawprogram_xml)
         .context("failed to read rawprogram XML")?;
 
-    let data: Data = from_str(&xml_content)
+    let programs = parse_rawprogram_xml(&xml_content)
         .context("failed to parse rawprogram XML")?;
 
     // Group programs by label so that multi-chunk partitions (sparsechunk
     // entries listed as separate <program> elements with the same label)
     // are merged instead of overwriting each other.
     let mut label_groups: BTreeMap<String, Vec<&Program>> = BTreeMap::new();
-    for program in &data.programs {
+    for program in &programs {
         if program.filename.is_empty() || program.label.is_empty() {
             continue;
         }
@@ -126,11 +160,9 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
         let out_name = format!("{safe_label}.img");
         let out_path = output_dir.join(&out_name);
 
-        let default_sector_size: u64 = 512;
-
         if programs.len() == 1 {
             let program = programs[0];
-            let sector_size = program.sector_size.unwrap_or(default_sector_size);
+            let sector_size = program.sector_size;
 
             if let Some(src) = resolve_file(&temp_dir, &program.filename) {
                 // Honor file_sector_offset: read from the specified offset
@@ -166,7 +198,7 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
                 };
                 let mut out_file = File::create(&out_path)?;
                 for p in &sorted {
-                    let ss = p.sector_size.unwrap_or(default_sector_size);
+                    let ss = p.sector_size;
                     let offset = p.file_sector_offset * ss;
                     let length = p.num_partition_sectors * ss;
                     let mut f = File::open(&src)?;
@@ -250,22 +282,38 @@ fn write_chunks(chunks: &[PathBuf], out_path: &Path) -> Result<()> {
 }
 
 /// Find the rawprogram XML file in the temp directory.
-/// Prefers rawprogram_unsparse0.xml over other variants.
+/// Prefers rawprogram_unsparse variants, then rawprogram0, then any rawprogram*.xml.
 fn find_rawprogram_xml(dir: &Path) -> Result<PathBuf> {
-    let preferred = dir.join("rawprogram_unsparse0.xml");
-    if preferred.is_file() {
-        return Ok(preferred);
-    }
-
+    // Collect all rawprogram*.xml candidates
+    let mut candidates: Vec<PathBuf> = Vec::new();
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let name = entry.file_name().to_string_lossy().to_lowercase();
         if name.starts_with("rawprogram") && name.ends_with(".xml") {
-            return Ok(entry.path());
+            candidates.push(entry.path());
         }
     }
 
-    anyhow::bail!("no rawprogram*.xml found in archive");
+    if candidates.is_empty() {
+        anyhow::bail!("no rawprogram*.xml found in archive");
+    }
+
+    // Prefer rawprogram_unsparse (has reassembled entries)
+    for c in &candidates {
+        let name = c.file_name().unwrap().to_string_lossy().to_lowercase();
+        if name.contains("unsparse") {
+            return Ok(c.clone());
+        }
+    }
+    // Then rawprogram0
+    for c in &candidates {
+        let name = c.file_name().unwrap().to_string_lossy().to_lowercase();
+        if name == "rawprogram0.xml" {
+            return Ok(c.clone());
+        }
+    }
+    // Fall back to first available
+    Ok(candidates.into_iter().next().unwrap())
 }
 
 /// Find sparse chunk files for a given partition.
