@@ -11,7 +11,10 @@ const RKFW_MAGIC: &[u8; 4] = b"RKFW";
 const AFP_MAGIC_RKAF: &[u8; 4] = b"RKAF";
 const AFP_MAGIC_RKAS: &[u8; 4] = b"RKAS";
 
-const AFP_ENTRY_SIZE: usize = 0x48; // 72 bytes
+// AFP (RKAF) entry: name(32) + file(64) + offset(4) + flash_offset(4) + usespace(4) + size(4) = 112
+const AFP_ENTRY_SIZE: usize = 0x70;
+// AFP header: magic(4) + size(4) + model(64) + manufacturer(60) + version(4) + item_count(4) = 140
+const AFP_HEADER_SIZE: usize = 0x8C;
 
 /// Check if a file looks like a Rockchip RKFW image.
 pub fn probe(data: &[u8]) -> bool {
@@ -33,10 +36,16 @@ fn parse_afp_entry(buf: &[u8]) -> Result<AfpEntry> {
     if buf.len() < AFP_ENTRY_SIZE {
         bail!("AFP entry buffer too small");
     }
+    // Entry layout (0x70 = 112 bytes):
+    //   0x00..0x20  name (32 bytes, null-terminated)
+    //   0x20..0x60  file path (64 bytes, null-terminated)
+    //   0x60..0x64  offset (u32 LE) — relative to AFP container start
+    //   0x64..0x68  flash_offset (u32 LE)
+    //   0x68..0x6C  usespace (u32 LE)
+    //   0x6C..0x70  size (u32 LE)
     let name = read_null_terminated(&buf[0x00..0x20]);
-    let offset = u32::from_le_bytes(buf[0x20..0x24].try_into()?);
-    // 0x24..0x28 is padding/user data
-    let size = u32::from_le_bytes(buf[0x28..0x2C].try_into()?);
+    let offset = u32::from_le_bytes(buf[0x60..0x64].try_into()?);
+    let size = u32::from_le_bytes(buf[0x6C..0x70].try_into()?);
 
     Ok(AfpEntry { name, offset, size })
 }
@@ -55,16 +64,21 @@ fn strip_ab_suffix(name: &str) -> String {
 pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
     let mut f = File::open(input).context("failed to open Rockchip image")?;
 
-    // Parse RKFW header
-    let mut rkfw_header = [0u8; 0x24];
+    // Parse RKFW header (packed/unaligned layout):
+    // 0x00: magic (4), 0x04: header_size (2), 0x06: version (4),
+    // 0x0A: code (4), 0x0E: date (7), 0x15: chip (4),
+    // 0x19: loader_offset (4), 0x1D: loader_size (4),
+    // 0x21: image_offset (4), 0x25: image_size (4)
+    let mut rkfw_header = [0u8; 0x29];
     f.read_exact(&mut rkfw_header)?;
 
     if &rkfw_header[0..4] != RKFW_MAGIC {
         bail!("not an RKFW image: bad magic");
     }
 
-    let firmware_offset = u32::from_le_bytes(rkfw_header[0x1C..0x20].try_into()?) as u64;
-    let firmware_size = u32::from_le_bytes(rkfw_header[0x20..0x24].try_into()?) as u64;
+    // image_offset at 0x21, image_size at 0x25 (packed, not aligned)
+    let firmware_offset = u32::from_le_bytes(rkfw_header[0x21..0x25].try_into()?) as u64;
+    let firmware_size = u32::from_le_bytes(rkfw_header[0x25..0x29].try_into()?) as u64;
 
     if firmware_size == 0 {
         bail!("RKFW firmware size is 0");
@@ -73,8 +87,8 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
     // Seek to firmware.img (AFP container)
     f.seek(SeekFrom::Start(firmware_offset))?;
 
-    // Read AFP header
-    let mut afp_header = [0u8; 0x4C];
+    // Read AFP header (0x8C bytes)
+    let mut afp_header = [0u8; AFP_HEADER_SIZE];
     f.read_exact(&mut afp_header)?;
 
     // Validate AFP magic
@@ -86,12 +100,13 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
         );
     }
 
-    let entry_count = u32::from_le_bytes(afp_header[0x44..0x48].try_into()?) as usize;
+    // entry_count at offset 0x88 within AFP header
+    let entry_count = u32::from_le_bytes(afp_header[0x88..0x8C].try_into()?) as usize;
     if entry_count == 0 || entry_count > 1024 {
         bail!("invalid AFP entry count: {entry_count}");
     }
 
-    // Read entry table
+    // Read entry table (each entry is 0x70 bytes)
     let mut entries = Vec::with_capacity(entry_count);
     let mut entry_buf = [0u8; AFP_ENTRY_SIZE];
     for _ in 0..entry_count {
