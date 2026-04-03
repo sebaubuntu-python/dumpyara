@@ -284,8 +284,13 @@ fn extract_ftf(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
         };
         let out_path = output_dir.join(&out_name);
 
-        extract_sin_data(&data, &out_path)?;
-        extracted.push(out_path);
+        match extract_sin_data(&data, &out_path) {
+            Ok(()) => extracted.push(out_path),
+            Err(_) => {
+                // Skip unrecognized .sin entries (e.g. non-SIN files with .sin extension)
+                let _ = std::fs::remove_file(&out_path);
+            }
+        }
     }
 
     Ok(extracted)
