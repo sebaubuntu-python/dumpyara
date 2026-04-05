@@ -8,8 +8,6 @@
 from pathlib import Path
 from subprocess import STDOUT, check_output
 
+
 def extract_erofs(image: Path, output_dir: Path):
-	return check_output(
-		["fsck.erofs", f"--extract={output_dir}", f"{image}"],
-		stderr=STDOUT
-	)
+    return check_output(["fsck.erofs", f"--extract={output_dir}", f"{image}"], stderr=STDOUT)

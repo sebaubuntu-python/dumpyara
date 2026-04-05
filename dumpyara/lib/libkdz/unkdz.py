@@ -14,285 +14,324 @@ from binascii import b2a_hex
 from dumpyara.lib.libkdz import kdz
 from sebaubuntu_libs.liblogging import LOGD
 
+
 class KDZFileTools(kdz.KDZFile):
-	"""
-	LGE KDZ File tools
-	"""
+    """
+    LGE KDZ File tools
+    """
 
-	# Setup variables
-	partitions = []
-	outdir = "kdzextracted"
-	infile = None
+    # Setup variables
+    partitions = []
+    outdir = "kdzextracted"
+    infile = None
 
-	kdz_header = {
-          b"\x28\x05\x00\x00"b"\x34\x31\x25\x80":	0,
-          b"\x18\x05\x00\x00"b"\x32\x79\x44\x50":	1,
-          kdz.KDZFile._dz_header:			2,
-	}
+    kdz_header = {
+        b"\x28\x05\x00\x00\x34\x31\x25\x80": 0,
+        b"\x18\x05\x00\x00\x32\x79\x44\x50": 1,
+        kdz.KDZFile._dz_header: 2,
+    }
 
+    def readKDZHeader(self):
+        """
+        Reads the KDZ header, and returns a single kdz_item
+        in the form as defined by self._dz_format_dict
+        """
 
-	def readKDZHeader(self):
-		"""
-		Reads the KDZ header, and returns a single kdz_item
-		in the form as defined by self._dz_format_dict
-		"""
+        # Read a whole DZ header
+        buf = self.infile.read(self._dz_length)
 
-		# Read a whole DZ header
-		buf = self.infile.read(self._dz_length)
+        # "Make the item"
+        # Create a new dict using the keys from the format string
+        # and the format string itself
+        # and apply the format to the buffer
+        kdz_item = dict(zip(self._dz_format_dict.keys(), self._dz_struct.unpack(buf)))
 
-		# "Make the item"
-		# Create a new dict using the keys from the format string
-		# and the format string itself
-		# and apply the format to the buffer
-		kdz_item = dict(zip(
-			self._dz_format_dict.keys(),
-			self._dz_struct.unpack(buf)
-		))
+        # Collapse (truncate) each key's value if it's listed as collapsible
+        for key in self._dz_collapsibles:
+            if type(kdz_item[key]) is str or type(kdz_item[key]) is bytes:
+                kdz_item[key] = kdz_item[key].rstrip(b"\x00")
+                if b"\x00" in kdz_item[key]:
+                    LOGD("[!] Warning: extraneous data found IN " + key)
+                    # sys.exit(1)
+            elif type(kdz_item[key]) is int:
+                if kdz_item[key] != 0:
+                    LOGD(
+                        '[!] Error: field "'
+                        + key
+                        + '" is non-zero ('
+                        + b2a_hex(kdz_item[key])
+                        + ")"
+                    )
+                    sys.exit(1)
+            else:
+                LOGD("[!] Error: internal error")
+                sys.exit(-1)
 
-		# Collapse (truncate) each key's value if it's listed as collapsible
-		for key in self._dz_collapsibles:
-			if type(kdz_item[key]) is str or type(kdz_item[key]) is bytes:
-				kdz_item[key] = kdz_item[key].rstrip(b'\x00')
-				if b'\x00' in kdz_item[key]:
-					LOGD("[!] Warning: extraneous data found IN "+key)
-					#sys.exit(1)
-			elif type(kdz_item[key]) is int:
-				if kdz_item[key] != 0:
-					LOGD('[!] Error: field "'+key+'" is non-zero ('+b2a_hex(kdz_item[key])+')')
-					sys.exit(1)
-			else:
-				LOGD("[!] Error: internal error")
-				sys.exit(-1)
+        return kdz_item
 
-		return kdz_item
+    def getPartitions(self):
+        """
+        Returns the list of partitions from a KDZ file containing multiple segments
+        """
 
-	def getPartitions(self):
-		"""
-		Returns the list of partitions from a KDZ file containing multiple segments
-		"""
+        # Setup initial values
+        last = False
+        cont = not last
+        self.dataStart = 1 << 63
 
-		# Setup initial values
-		last = False
-		cont = not last
-		self.dataStart = 1<<63
+        while cont:
+            # Read the current KDZ header
+            kdz_sub = self.readKDZHeader()
 
-		while cont:
+            # Make sure the partition length isn't 0
+            if kdz_sub["length"] != 0:
+                # Add it to our list
+                self.partitions.append(kdz_sub)
 
-			# Read the current KDZ header
-			kdz_sub = self.readKDZHeader()
+            # Update start of data, if needed
+            if kdz_sub["offset"] < self.dataStart:
+                self.dataStart = kdz_sub["offset"]
 
-			# Make sure the partition length isn't 0
-			if kdz_sub['length'] != 0:
-				# Add it to our list
-				self.partitions.append(kdz_sub)
+            # Was it the last one?
+            cont = not last
 
-			# Update start of data, if needed
-			if kdz_sub['offset'] < self.dataStart:
-				self.dataStart = kdz_sub['offset']
+            # Check for end of headers
+            nextchar = self.infile.read(1)
+            # Is this the last KDZ header? (ctrl-C, how appropos)
+            if nextchar == b"\x03":
+                last = True
+            # Alternative, immediate end
+            elif nextchar == b"\x00":
+                cont = False
+            # Rewind file pointer 1 byte
+            else:
+                self.infile.seek(-1, os.SEEK_CUR)
 
-			# Was it the last one?
-			cont = not last
+        # Record where headers end
+        self.headerEnd = self.infile.tell()
 
-			# Check for end of headers
-			nextchar = self.infile.read(1)
-			# Is this the last KDZ header? (ctrl-C, how appropos)
-			if nextchar == b'\x03':
-				last = True
-			# Alternative, immediate end
-			elif nextchar == b'\x00':
-				cont = False
-			# Rewind file pointer 1 byte
-			else:
-				self.infile.seek(-1, os.SEEK_CUR)
+        # Paranoia check for an updated file format
+        if not (self.dataStart - self.headerEnd - 1) < 0:
+            buf = self.infile.read(self.dataStart - self.headerEnd - 1)
+            if len(buf.lstrip(b"\x00")) > 0:
+                LOGD(
+                    "[!] Warning: Data between headers and payload! (offsets {:d} to {:d})".format(
+                        self.headerEnd, self.dataStart
+                    )
+                )
+                self.hasExtra = True
 
-		# Record where headers end
-		self.headerEnd = self.infile.tell()
+        # Make partition list
+        return [(x["name"], x["length"]) for x in self.partitions]
 
-		# Paranoia check for an updated file format
-		if not (self.dataStart - self.headerEnd - 1) < 0:
-			buf = self.infile.read(self.dataStart - self.headerEnd - 1)
-			if len(buf.lstrip(b'\x00')) > 0:
-				LOGD("[!] Warning: Data between headers and payload! (offsets {:d} to {:d})".format(self.headerEnd, self.dataStart))
-				self.hasExtra = True
+    def extractPartition(self, index):
+        """
+        Extracts a partition from a KDZ file
+        """
 
-		# Make partition list
-		return [(x['name'],x['length']) for x in self.partitions]
+        currentPartition = self.partitions[index]
 
-	def extractPartition(self,index):
-		"""
-		Extracts a partition from a KDZ file
-		"""
+        # Seek to the beginning of the compressed data in the specified partition
+        self.infile.seek(currentPartition["offset"], os.SEEK_SET)
 
-		currentPartition = self.partitions[index]
+        # Ensure that the output directory exists
+        if not os.path.exists(self.outdir):
+            os.makedirs(self.outdir)
 
-		# Seek to the beginning of the compressed data in the specified partition
-		self.infile.seek(currentPartition['offset'], os.SEEK_SET)
+        # Open the new file for writing
+        outfile = open(os.path.join(self.outdir, currentPartition["name"].decode("utf8")), "wb")
 
-		# Ensure that the output directory exists
-		if not os.path.exists(self.outdir):
-			os.makedirs(self.outdir)
+        # Use 1024 byte chunks
+        chunkSize = 1024
 
-		# Open the new file for writing
-		outfile = open(os.path.join(self.outdir,currentPartition['name'].decode("utf8")), 'wb')
+        # uncomment to prevent runaways
+        # for x in xrange(10):
 
-		# Use 1024 byte chunks
-		chunkSize = 1024
+        while True:
+            # Read file in 1024 byte chunks
+            outfile.write(self.infile.read(chunkSize))
 
-		# uncomment to prevent runaways
-		#for x in xrange(10):
+            # If the output file + chunkSize would be larger than the input data
+            if outfile.tell() + chunkSize >= currentPartition["length"]:
+                # Change the chunk size to be the difference between the length of the input and the current length of the output
+                outfile.write(self.infile.read(currentPartition["length"] - outfile.tell()))
+                # Prevent runaways!
+                break
 
-		while True:
+        # Close the file
+        outfile.close()
 
-			# Read file in 1024 byte chunks
-			outfile.write(self.infile.read(chunkSize))
+    def saveExtra(self):
+        """
+        Save the extra data that has appeared between headers&files
+        """
 
-			# If the output file + chunkSize would be larger than the input data
-			if outfile.tell() + chunkSize >= currentPartition['length']:
-				# Change the chunk size to be the difference between the length of the input and the current length of the output
-				outfile.write(self.infile.read(currentPartition['length'] - outfile.tell() ))
-				# Prevent runaways!
-				break
+        try:
+            if not self.hasExtra:
+                return
+        except AttributeError:
+            return
 
-		# Close the file
-		outfile.close()
+        filename = os.path.join(self.outdir, "kdz_extras.bin")
 
-	def saveExtra(self):
-		"""
-		Save the extra data that has appeared between headers&files
-		"""
+        extra = open(filename, "wb")
 
-		try:
-			if not self.hasExtra:
-				return
-		except AttributeError:
-			return
+        LOGD("[+] Extracting extra data to " + filename)
 
-		filename = os.path.join(self.outdir, "kdz_extras.bin")
+        self.infile.seek(self.headerEnd, os.SEEK_SET)
 
-		extra = open(filename, "wb")
+        total = self.dataStart - self.headerEnd
+        while total > 0:
+            count = 4096 if 4096 < total else total
 
-		LOGD("[+] Extracting extra data to " + filename)
+            buf = self.infile.read(count)
+            extra.write(buf)
 
-		self.infile.seek(self.headerEnd, os.SEEK_SET)
+            total -= count
 
-		total = self.dataStart - self.headerEnd
-		while total > 0:
-			count = 4096 if 4096 < total else total
+        extra.close()
 
-			buf = self.infile.read(count)
-			extra.write(buf)
+    def saveParams(self):
+        """
+        Save the parameters for creating a compatible file
+        """
 
-			total -= count
+        params = open(os.path.join(self.outdir, ".kdz.params"), "wt")
+        params.write('# saved parameters from the file "{:s}"\n'.format(self.kdzfile))
+        params.write("version={:d}\n".format(self.header_type))
+        params.write(
+            "# note, this is actually quite fluid, dataStart just needs to be large enough\n"
+        )
+        params.write(
+            "# for headers not to overwrite data; roughly 16 bytes for overhead plus 272\n"
+        )
+        params.write("# bytes per file should be sufficient (but not match original)\n")
+        params.write("dataStart={:d}\n".format(self.dataStart))
+        params.write("# embedded files\n")
 
-		extra.close()
+        out = []
+        i = 0
+        for p in self.partitions:
+            out.append({"name": p["name"], "data": p["offset"], "header": i})
+            i += 1
 
-	def saveParams(self):
-		"""
-		Save the parameters for creating a compatible file
-		"""
+        out.sort(key=lambda p: p["data"])
 
-		params = open(os.path.join(self.outdir, ".kdz.params"), "wt")
-		params.write('# saved parameters from the file "{:s}"\n'.format(self.kdzfile))
-		params.write("version={:d}\n".format(self.header_type))
-		params.write("# note, this is actually quite fluid, dataStart just needs to be large enough\n")
-		params.write("# for headers not to overwrite data; roughly 16 bytes for overhead plus 272\n")
-		params.write("# bytes per file should be sufficient (but not match original)\n")
-		params.write("dataStart={:d}\n".format(self.dataStart))
-		params.write("# embedded files\n")
+        i = 0
+        for p in out:
+            params.write("payload{:d}={:s}\n".format(i, p["name"].decode("utf8")))
+            params.write("payload{:d}head={:d}\n".format(i, p["header"]))
+            i += 1
 
-		out = []
-		i = 0
-		for p in self.partitions:
-			out.append({'name': p['name'], 'data': p['offset'], 'header': i})
-			i += 1
+        params.close()
 
-		out.sort(key=lambda p: p['data'])
+    def parseArgs(self):
+        # Parse arguments
+        parser = argparse.ArgumentParser(
+            description="LG KDZ File Extractor originally by IOMonster"
+        )
+        parser.add_argument(
+            "-f", "--file", help="KDZ File to read", action="store", required=True, dest="kdzfile"
+        )
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument(
+            "-l", "--list", help="list partitions", action="store_true", dest="listOnly"
+        )
+        group.add_argument(
+            "-x", "--extract", help="extract all partitions", action="store_true", dest="extractAll"
+        )
+        group.add_argument(
+            "-s",
+            "--single",
+            help="single Extract by ID",
+            action="store",
+            dest="extractID",
+            type=int,
+        )
+        parser.add_argument(
+            "-d", "--dir", "-o", "--out", help="output directory", action="store", dest="outdir"
+        )
 
-		i = 0
-		for p in out:
-			params.write("payload{:d}={:s}\n".format(i, p['name'].decode("utf8")))
-			params.write("payload{:d}head={:d}\n".format(i, p['header']))
-			i += 1
+        return parser.parse_args()
 
-		params.close()
+    def openFile(self, kdzfile):
+        # Open the file
+        try:
+            self.infile = open(kdzfile, "rb")
+        except IOError as err:
+            LOGD(err)
+            sys.exit(1)
 
-	def parseArgs(self):
-		# Parse arguments
-		parser = argparse.ArgumentParser(description='LG KDZ File Extractor originally by IOMonster')
-		parser.add_argument('-f', '--file', help='KDZ File to read', action='store', required=True, dest='kdzfile')
-		group = parser.add_mutually_exclusive_group(required=True)
-		group.add_argument('-l', '--list', help='list partitions', action='store_true', dest='listOnly')
-		group.add_argument('-x', '--extract', help='extract all partitions', action='store_true', dest='extractAll')
-		group.add_argument('-s', '--single', help='single Extract by ID', action='store', dest='extractID', type=int)
-		parser.add_argument('-d', '--dir', '-o', '--out', help='output directory', action='store', dest='outdir')
+        # Get length of whole file
+        self.infile.seek(0, os.SEEK_END)
+        # os.seek() doesn't return current position?!
+        self.kdz_length = self.infile.tell()
+        self.infile.seek(0, os.SEEK_SET)
 
-		return parser.parse_args()
+        # Verify KDZ header
+        verify_header = self.infile.read(8)
 
-	def openFile(self, kdzfile):
-		# Open the file
-		try:
-			self.infile = open(kdzfile, "rb")
-		except IOError as err:
-			LOGD(err)
-			sys.exit(1)
+        if verify_header not in self.kdz_header:
+            LOGD("[!] Error: Unsupported KDZ file format.")
+            LOGD('[ ] Received header "{:s}".'.format(" ".join(b2a_hex(n) for n in verify_header)))
+            sys.exit(1)
 
-		# Get length of whole file
-		self.infile.seek(0, os.SEEK_END)
-		# os.seek() doesn't return current position?!
-		self.kdz_length = self.infile.tell()
-		self.infile.seek(0, os.SEEK_SET)
+        self.header_type = self.kdz_header[verify_header]
 
-		# Verify KDZ header
-		verify_header = self.infile.read(8)
+    def cmdExtractSingle(self, partID):
+        LOGD("[+] Extracting single partition from v{:d} file!\n".format(self.header_type))
+        LOGD(
+            "[+] Extracting "
+            + str(self.partList[partID][0])
+            + " to "
+            + os.path.join(self.outdir, self.partList[partID][0].decode("utf8"))
+        )
+        self.extractPartition(partID)
 
-		if verify_header not in self.kdz_header:
-			LOGD("[!] Error: Unsupported KDZ file format.")
-			LOGD('[ ] Received header "{:s}".'.format(" ".join(b2a_hex(n) for n in verify_header)))
-			sys.exit(1)
+    def cmdExtractAll(self):
+        LOGD("[+] Extracting all partitions from v{:d} file!\n".format(self.header_type))
+        for part in enumerate(self.partList):
+            LOGD(
+                "[+] Extracting "
+                + part[1][0].decode("utf8")
+                + " to "
+                + os.path.join(self.outdir, part[1][0].decode("utf8"))
+            )
+            self.extractPartition(part[0])
+        self.saveExtra()
+        self.saveParams()
 
-		self.header_type = self.kdz_header[verify_header]
+    def cmdListPartitions(self):
+        LOGD(
+            "[+] KDZ Partition List (format v{:d})\n=========================================".format(
+                self.header_type
+            )
+        )
+        for part in enumerate(self.partList):
+            LOGD("{:2d} : {:s} ({:d} bytes)".format(part[0], part[1][0].decode("utf8"), part[1][1]))
 
+    def main(self):
+        args = self.parseArgs()
+        self.kdzfile = args.kdzfile
+        self.openFile(args.kdzfile)
+        self.partList = self.getPartitions()
 
-	def cmdExtractSingle(self, partID):
-		LOGD("[+] Extracting single partition from v{:d} file!\n".format(self.header_type))
-		LOGD("[+] Extracting " + str(self.partList[partID][0]) + " to " + os.path.join(self.outdir,self.partList[partID][0].decode("utf8")))
-		self.extractPartition(partID)
+        if args.outdir:
+            self.outdir = args.outdir
 
-	def cmdExtractAll(self):
-		LOGD("[+] Extracting all partitions from v{:d} file!\n".format(self.header_type))
-		for part in enumerate(self.partList):
-			LOGD("[+] Extracting " + part[1][0].decode("utf8") + " to " + os.path.join(self.outdir,part[1][0].decode("utf8")))
-			self.extractPartition(part[0])
-		self.saveExtra()
-		self.saveParams()
+        if args.listOnly:
+            self.cmdListPartitions()
 
-	def cmdListPartitions(self):
-		LOGD("[+] KDZ Partition List (format v{:d})\n=========================================".format(self.header_type))
-		for part in enumerate(self.partList):
-			LOGD("{:2d} : {:s} ({:d} bytes)".format(part[0], part[1][0].decode("utf8"), part[1][1]))
+        elif args.extractID is not None:
+            if args.extractID >= 0 and args.extractID < len(self.partList):
+                self.cmdExtractSingle(args.extractID)
+            else:
+                LOGD("[!] Segment {:d} is out of range!".format(args.extractID))
 
-	def main(self):
-		args = self.parseArgs()
-		self.kdzfile = args.kdzfile
-		self.openFile(args.kdzfile)
-		self.partList = self.getPartitions()
+        elif args.extractAll:
+            self.cmdExtractAll()
 
-		if args.outdir:
-			self.outdir = args.outdir
-
-		if args.listOnly:
-			self.cmdListPartitions()
-
-		elif args.extractID is not None:
-			if args.extractID >= 0 and args.extractID < len(self.partList):
-				self.cmdExtractSingle(args.extractID)
-			else:
-				LOGD("[!] Segment {:d} is out of range!".format(args.extractID))
-
-		elif args.extractAll:
-			self.cmdExtractAll()
 
 if __name__ == "__main__":
-	kdztools = KDZFileTools()
-	kdztools.main()
-
+    kdztools = KDZFileTools()
+    kdztools.main()

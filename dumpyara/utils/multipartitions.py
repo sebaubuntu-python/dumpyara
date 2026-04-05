@@ -14,28 +14,33 @@ from subprocess import STDOUT, check_output
 
 from dumpyara.lib.libpayload import extract_android_ota_payload
 
+
 def extract_payload(image: Path, output_dir: Path):
-	extract_android_ota_payload(image, output_dir)
+    extract_android_ota_payload(image, output_dir)
+
 
 def extract_super(image: Path, output_dir: Path):
-	unsparsed_super = output_dir / "super.unsparsed.img"
+    unsparsed_super = output_dir / "super.unsparsed.img"
 
-	try:
-		check_output(["simg2img", image, unsparsed_super], stderr=STDOUT) # TODO: Rewrite libsparse...
-	except Exception:
-		LOGI(f"Failed to unsparse {image.name}")
-	else:
-		move(unsparsed_super, image)
+    try:
+        check_output(
+            ["simg2img", image, unsparsed_super], stderr=STDOUT
+        )  # TODO: Rewrite libsparse...
+    except Exception:
+        LOGI(f"Failed to unsparse {image.name}")
+    else:
+        move(unsparsed_super, image)
 
-	if unsparsed_super.is_file():
-		unsparsed_super.unlink()
+    if unsparsed_super.is_file():
+        unsparsed_super.unlink()
 
-	lpunpack(image, output_dir)
+    lpunpack(image, output_dir)
+
 
 MULTIPARTITIONS: Dict[Pattern[str], Callable[[Path, Path], None]] = {
-	compile(key): value
-	for key, value in {
-		"payload.bin": extract_payload,
-		"super(?!.*(_empty)).*\\.img": extract_super,
-	}.items()
+    compile(key): value
+    for key, value in {
+        "payload.bin": extract_payload,
+        "super(?!.*(_empty)).*\\.img": extract_super,
+    }.items()
 }

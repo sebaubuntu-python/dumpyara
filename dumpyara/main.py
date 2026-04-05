@@ -11,34 +11,31 @@ from pathlib import Path
 from sebaubuntu_libs.liblocale import setup_locale
 from sebaubuntu_libs.liblogging import setup_logging
 
+
 def main():
-	parser = ArgumentParser(description='Dumpyara')
+    parser = ArgumentParser(description="Dumpyara")
 
-	# Main arguments
-	parser.add_argument("file", type=Path,
-						help="path to a device OTA")
-	parser.add_argument("-o", "--output", type=Path, default=None,
-						help="custom output folder")
+    # Main arguments
+    parser.add_argument("file", type=Path, help="path to a device OTA")
+    parser.add_argument("-o", "--output", type=Path, default=None, help="custom output folder")
 
-	# Optional arguments
-	parser.add_argument("-v", "--verbose", action='store_true',
-						help="enable verbose output")
+    # Optional arguments
+    parser.add_argument("-v", "--verbose", action="store_true", help="enable verbose output")
 
-	parser.add_argument("-d", "--debug", action='store_true',
-						help="enable debugging features")
+    parser.add_argument("-d", "--debug", action="store_true", help="enable debugging features")
 
-	args = parser.parse_args()
+    args = parser.parse_args()
 
-	setup_locale()
+    setup_locale()
 
-	setup_logging(args.debug or args.verbose)
+    setup_logging(args.debug or args.verbose)
 
-	setup_shutil_formats()
+    setup_shutil_formats()
 
-	output = Path.cwd() / args.file.stem
-	if args.output:
-		output = args.output
+    output = Path.cwd() / args.file.stem
+    if args.output:
+        output = args.output
 
-	output_path = dumpyara(args.file, output, args.debug)
+    output_path = dumpyara(args.file, output, args.debug)
 
-	print(f"\nDone! You can find the dump in {str(output_path)}")
+    print(f"\nDone! You can find the dump in {str(output_path)}")
