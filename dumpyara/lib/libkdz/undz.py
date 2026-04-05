@@ -17,6 +17,7 @@ import hashlib
 # from binascii import crc32
 from binascii import b2a_hex
 from uuid import UUID
+from typing import Dict, List, Optional
 
 from dumpyara.lib.libkdz import dz, gpt
 from sebaubuntu_libs.liblogging import LOGD
@@ -26,6 +27,13 @@ class UNDZUtils(object):
     """
     Common class for unpacking DZ file structures
     """
+
+    _dz_length: int
+    _dz_area: str
+    _dz_collapsibles: List[str]
+
+    def unpackdict(self, buffer: bytes) -> Optional[Dict]:
+        raise NotImplementedError("unpackdict must be implemented by subclass")
 
     def loadHeader(self, file):
         """
@@ -146,7 +154,7 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
         """
         # LOGD our messages
         for m in self.messages:
-            LOGD(m, file=file)
+            LOGD(m, file=file)  # type: ignore
 
     def display(self, sliceIdx, selfIdx):
         """
@@ -402,9 +410,10 @@ class UNDZSlice(object):
                 # elif sliceIdx != -1:
             else:
                 LOGD("{:2d}/?? : {:s} (<empty>)".format(sliceIdx, self.name))
-        for chunk in self.chunks:
-            chunk.display(sliceIdx, chunkIdx)
-            chunkIdx += 1
+        else:
+            for chunk in self.chunks:
+                chunk.display(sliceIdx, chunkIdx)
+                chunkIdx += 1
         return chunkIdx
 
     def getChunkCount(self):

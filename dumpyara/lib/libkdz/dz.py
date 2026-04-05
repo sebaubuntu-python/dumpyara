@@ -10,6 +10,7 @@ from __future__ import print_function
 import sys
 from struct import Struct
 from collections import OrderedDict
+from typing import Any, Dict, List, Optional, Type
 
 from sebaubuntu_libs.liblogging import LOGD
 
@@ -22,14 +23,21 @@ class DZStruct(object):
     # Length of the headers in DZ files
     _dz_length = 512
 
-    def __init__(self, classy):
+    _dz_area: str
+    _dz_header: bytes
+
+    _dz_struct: Struct
+    _dz_collapsibles: List[str]
+    _dz_format_dict: OrderedDict[Any, tuple[str, bool]]
+
+    def __init__(self, classy: Type["DZStruct"]):
         """
         Common initializations for all DZ structures
         """
 
         # Generate the struct for .unpack()
         try:
-            classy._dzstruct
+            classy._dz_struct
 
         except AttributeError:
             classy._dz_struct = Struct(
@@ -76,7 +84,7 @@ class DZStruct(object):
 
         return buffer
 
-    def unpackdict(self, buffer):
+    def unpackdict(self, buffer: bytes) -> Optional[Dict]:
         """
         Unpack data in buffer into a returned dictionary, return None
         if magic number/header is absent

@@ -35,3 +35,6 @@ exclude = ["dumpyara/lib/libpayload/update_metadata_pb2.py"]
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.pyright]
+ignore = ["dumpyara/lib/libpayload/__init__.py", "dumpyara/lib/libpayload/update_metadata_pb2.py"]

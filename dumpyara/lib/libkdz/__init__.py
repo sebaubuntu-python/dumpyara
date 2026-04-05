@@ -22,7 +22,7 @@ def unpack_kdz(filename: str, work_dir: str):
     dz_file = list(Path(work_dir).glob("*.dz"))
     if dz_file:
         # Just take the first found file
-        unpack_dz(dz_file[0].absolute(), work_dir)
+        unpack_dz(str(dz_file[0].absolute()), work_dir)
 
 
 def unpack_dz(filename: str, work_dir: str):

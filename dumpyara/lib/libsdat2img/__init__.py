@@ -129,10 +129,6 @@ if __name__ == "__main__":
         print("    <system_new_file>: system new dat file")
         print("    [system_img]: output system image\n\n")
         print("Visit xda thread for more information.\n")
-        try:
-            input = raw_input
-        except NameError:
-            pass
         input("Press ENTER to exit...")
         sys.exit()
 

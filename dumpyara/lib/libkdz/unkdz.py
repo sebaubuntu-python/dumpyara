@@ -37,6 +37,8 @@ class KDZFileTools(kdz.KDZFile):
         in the form as defined by self._dz_format_dict
         """
 
+        assert self.infile is not None, "File must be opened before getting partitions!"
+
         # Read a whole DZ header
         buf = self.infile.read(self._dz_length)
 
@@ -57,9 +59,9 @@ class KDZFileTools(kdz.KDZFile):
                 if kdz_item[key] != 0:
                     LOGD(
                         '[!] Error: field "'
-                        + key
+                        + str(key)
                         + '" is non-zero ('
-                        + b2a_hex(kdz_item[key])
+                        + str(b2a_hex(kdz_item[key]))
                         + ")"
                     )
                     sys.exit(1)
@@ -73,6 +75,8 @@ class KDZFileTools(kdz.KDZFile):
         """
         Returns the list of partitions from a KDZ file containing multiple segments
         """
+
+        assert self.infile is not None, "File must be opened before getting partitions!"
 
         # Setup initial values
         last = False
@@ -129,6 +133,8 @@ class KDZFileTools(kdz.KDZFile):
         Extracts a partition from a KDZ file
         """
 
+        assert self.infile is not None, "File must be opened before getting partitions!"
+
         currentPartition = self.partitions[index]
 
         # Seek to the beginning of the compressed data in the specified partition
@@ -171,6 +177,8 @@ class KDZFileTools(kdz.KDZFile):
                 return
         except AttributeError:
             return
+
+        assert self.infile is not None, "File must be opened before getting partitions!"
 
         filename = os.path.join(self.outdir, "kdz_extras.bin")
 
@@ -273,7 +281,7 @@ class KDZFileTools(kdz.KDZFile):
 
         if verify_header not in self.kdz_header:
             LOGD("[!] Error: Unsupported KDZ file format.")
-            LOGD('[ ] Received header "{:s}".'.format(" ".join(b2a_hex(n) for n in verify_header)))
+            LOGD('[ ] Received header "{:s}".'.format(b2a_hex(verify_header)))
             sys.exit(1)
 
         self.header_type = self.kdz_header[verify_header]

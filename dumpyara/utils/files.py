@@ -7,7 +7,7 @@
 from os import chmod, walk, unlink
 
 try:
-    from os import chflags
+    from os import chflags  # type: ignore
 except Exception:
 
     def chflags(*args, **kwargs):
@@ -16,16 +16,23 @@ except Exception:
 
 from pathlib import Path
 from shutil import rmtree
+from typing import Callable, TypeVar
+
+T = TypeVar("T")
 
 
-def get_recursive_files_list(path: Path, relative: bool = False, as_str: bool = False):
+def get_recursive_files_list(
+    path: Path,
+    relative: bool = False,
+    cast_func: Callable[[Path], T] = Path,
+):
     for currentpath, _, files in walk(path):
         for file in files:
             file_path = Path(currentpath) / file
             if relative:
                 file_path = file_path.relative_to(path)
 
-            yield str(file_path) if as_str else file_path
+            yield cast_func(file_path)
 
 
 def rmtree_recursive(name: Path):
