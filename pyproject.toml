@@ -14,7 +14,7 @@ dumpyara = 'dumpyara.main:main'
 python = "^3.9"
 Brotli = "^1.0.9"
 protobuf = ">=4.22.1,<7.0.0"
-sebaubuntu-libs = "^1.4.5"
+sebaubuntu-libs = "^2.0.0"
 liblp = "^1.0.2"
 py7zr = "^1.0.0"
 lz4 = "^4.3.3"
