@@ -5,7 +5,7 @@
 #
 
 from argparse import ArgumentParser
-from dumpyara import __version__ as version, current_path
+from dumpyara import __version__ as version
 from dumpyara.dumpyara import dumpyara
 from dumpyara.utils.shutil import setup_shutil_formats
 from pathlib import Path
@@ -39,7 +39,7 @@ def main():
 
 	setup_shutil_formats()
 
-	output = current_path / args.file.stem
+	output = Path.cwd() / args.file.stem
 	if args.output:
 		output = args.output
 
