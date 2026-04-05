@@ -30,7 +30,12 @@ def extract_bootimg(file: Path, output_path: Path):
 		(output_path / "dtbo.img").write_bytes(image_info.dtbo.read_bytes())
 
 	if image_info.ramdisk:
-		copy_tree(str(image_info.ramdisk), str(output_path / "ramdisk"), preserve_symlinks=True)
+		copy_tree(
+			str(image_info.ramdisk),
+			str(output_path / "ramdisk"),
+			preserve_symlinks=True,
+			skip_non_regular_files=True,
+		)
 
 	aik_manager.cleanup()
 
