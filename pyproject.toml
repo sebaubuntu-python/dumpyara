@@ -31,6 +31,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 100
+exclude = ["dumpyara/lib/libpayload/update_metadata_pb2.py"]
 
 [tool.ruff.format]
 docstring-code-format = true

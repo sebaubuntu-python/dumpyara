@@ -7,8 +7,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import sys
-from struct import Struct
 from collections import OrderedDict
 from dumpyara.lib.libkdz import dz
 

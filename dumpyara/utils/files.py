@@ -8,7 +8,8 @@ from os import chmod, walk, unlink
 try:
 	from os import chflags
 except Exception:
-	chflags = lambda *args, **kwargs: None
+	def chflags(*args, **kwargs):
+		pass
 from pathlib import Path
 from shutil import rmtree
 

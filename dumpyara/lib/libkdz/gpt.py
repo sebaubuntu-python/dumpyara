@@ -6,7 +6,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import os
 import sys
 import io
 from collections import OrderedDict
@@ -15,7 +14,8 @@ from uuid import UUID
 from binascii import crc32
 
 
-verbose = lambda msg: None
+def verbose(msg):
+	pass
 
 
 class NoGPT(Exception):
@@ -304,8 +304,6 @@ class GPT(object):
 
 
 if __name__ == "__main__":
-	verbose = lambda msg: print(msg)
-
 	progname = sys.argv[0]
 	del sys.argv[0]
 

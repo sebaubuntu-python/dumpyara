@@ -13,7 +13,8 @@ import zlib
 import zstandard as zstd
 import argparse
 import hashlib
-from binascii import crc32, b2a_hex
+#from binascii import crc32
+from binascii import b2a_hex
 from uuid import UUID
 
 from dumpyara.lib.libkdz import dz, gpt
@@ -43,7 +44,7 @@ class UNDZUtils(object):
 
 
                 # Verify DZ area header
-                if dz_item == None:
+                if dz_item is None:
                         LOGD("[!] Bad DZ {:s} header!".format(self._dz_area))
                         sys.exit(1)
 
@@ -201,7 +202,7 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
                     dctx = zstd.ZstdDecompressor()
                     buf = dctx.decompress(zdata, max_output_size=200000000)
     
-                crc = crc32(buf) & 0xFFFFFFFF
+                #crc = crc32(buf) & 0xFFFFFFFF
 
                 #if crc != self.crc32:
         ##              LOGD("[!] Error: CRC32 of data doesn't match header ({:08X} vs {:08X})".format(crc, self.crc32))
@@ -327,7 +328,7 @@ class UNDZChunk(dz.DZChunk, UNDZUtils):
 
 #                if targetAddr != self.targetAddr:
 #                        self.messages.append("[!] Uncompressed starting offset differs from chunk name!")
-                targetAddr = self.targetAddr
+                #targetAddr = self.targetAddr
 
 
 class UNDZSlice(object):
@@ -613,7 +614,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
                 try:
                         emptycount = 0
                         g = gpt.GPT(self.chunks[0].extract())
-                        ordered = range(len(g.slices)) if g.ordered else range(len(g.slices)).sort(key=lambda s: g.slices[s].startLBA)
+                        #ordered = range(len(g.slices)) if g.ordered else range(len(g.slices)).sort(key=lambda s: g.slices[s].startLBA)
 
                         self.shiftLBA = g.shiftLBA
 
@@ -741,7 +742,7 @@ class UNDZFile(dz.DZFile, UNDZUtils):
                 sliceIdx = 0
                 for slice in self.slices:
                         count = slice.display(sliceIdx, chunkIdx)
-                        if count != None:
+                        if count is not None:
                                 chunkIdx = count
                                 sliceIdx+=1
 
@@ -992,11 +993,11 @@ class DZFileTools:
 
                         cur = idx
                         slice = self.dz_file.getSlice(cur)
-                        if slice.getIndex() != None:
+                        if slice.getIndex() is not None:
                             while slice.getIndex() < idx:
                                 cur += idx - slice.getIndex() if slice.getIndex() else 1
                                 slice = self.dz_file.getSlice(cur)
-                                if slice.getIndex() == None:
+                                if slice.getIndex() is None:
                                     slice = self.dz_file.getSlice(idx)
 
                         name = slice.getSliceName() + ".img"

@@ -57,9 +57,9 @@ class DZStruct(object):
 		# pad any string keys that need padding
 		for k in self._dz_format_dict.keys():
 			if self._dz_format_dict[k][0][-1] == 's':
-				l = int(self._dz_format_dict[k][0][:-1])
+				l = int(self._dz_format_dict[k][0][:-1])  # noqa: E741
 				dout[k] = (din[k] if k in din else b"").ljust(l, b'\x00')
-			elif not k in din and k in self._dz_collapsibles:
+			elif k not in din and k in self._dz_collapsibles:
 				dout[k] = 0
 			else:
 				dout[k] = din[k]
