@@ -1,6 +1,5 @@
 #
-# Copyright (C) 2022 Dumpyara Project
-#
+# SPDX-FileCopyrightText: Dumpyara Project
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 """7zip wrapper."""

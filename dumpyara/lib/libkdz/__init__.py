@@ -1,6 +1,5 @@
 #
-# Copyright (C) 2024 Dumpyara Project
-#
+# SPDX-FileCopyrightText: Dumpyara Project
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 """kdz wrapper."""
