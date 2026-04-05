@@ -5,7 +5,6 @@
 #
 
 from argparse import ArgumentParser
-from dumpyara import __version__ as version
 from dumpyara.dumpyara import dumpyara
 from dumpyara.utils.shutil import setup_shutil_formats
 from pathlib import Path
@@ -13,10 +12,7 @@ from sebaubuntu_libs.liblocale import setup_locale
 from sebaubuntu_libs.liblogging import setup_logging
 
 def main():
-	print(f"Dumpyara\n"
-	      f"Version {version}\n")
-
-	parser = ArgumentParser(prog='python3 -m dumpyara')
+	parser = ArgumentParser(description='Dumpyara')
 
 	# Main arguments
 	parser.add_argument("file", type=Path,
