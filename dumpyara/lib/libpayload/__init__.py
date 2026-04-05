@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: 2022 cyxx
+# SPDX-License-Identifier: MIT
+#
+
 import hashlib
 import os
 from pathlib import Path

@@ -1,3 +1,8 @@
+#
+# SPDX-FileCopyrightText: Dumpyara Project
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

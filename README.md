@@ -50,6 +50,6 @@ python3 -m dumpyara <path to OTA file>
 #
 # Copyright (C) 2022 Dumpyara Project
 #
-# SPDX-License-Identifier: GPL-3.0
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 ```

@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+#
+# SPDX-FileCopyrightText: 2021 Andrei Conache
+# SPDX-License-Identifier: MIT
+#
 # -*- coding: utf-8 -*-
 #====================================================
 #          FILE: sdat2img.py

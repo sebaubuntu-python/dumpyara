@@ -1,0 +1,21 @@
+#
+# SPDX-FileCopyrightText: Dumpyara Project
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+version = 1
+SPDX-PackageName = "dumpyara"
+SPDX-PackageSupplier = "Dumpyara Project"
+SPDX-PackageDownloadLocation = "https://github.com/sebaubuntu-python/dumpyara"
+
+[[annotations]]
+path = ["poetry.lock"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Dumpyara Project"
+SPDX-License-Identifier = "GPL-3.0-or-later"
+
+[[annotations]]
+path = ["dumpyara/lib/libpayload/update_metadata_pb2.py"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 cyxx"
+SPDX-License-Identifier = "MIT"

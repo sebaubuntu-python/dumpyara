@@ -1,9 +1,14 @@
+#
+# SPDX-FileCopyrightText: Dumpyara Project
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 [tool.poetry]
 name = "dumpyara"
 version = "1.0.10"
 description = "Android firmware extractor"
 authors = ["Sebastiano Barezzi <seba@sebaubuntu.dev>"]
-license = "GPL-3.0"
+license = "GPL-3.0-or-later"
 readme = "README.md"
 repository = "https://github.com/sebaubuntu-python/dumpyara"
 
