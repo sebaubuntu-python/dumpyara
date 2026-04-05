@@ -8,41 +8,45 @@ Requires Python 3.9 or greater
 ## Installation
 
 ```sh
-pip3 install dumpyara
+pip install dumpyara
 ```
 
 ## Instructions
 
 ```sh
-python3 -m dumpyara <path to OTA file>
+python -m dumpyara <path to OTA file>
 ```
 
 ## Supported formats
 
 ### Step 1 - Archives
--   All the ones supported by shutil's extract_archive
--   Samsung's `.tar.md5` archives
--   Nested archives
--   LG's `.kdz` archives
+
+- All the ones supported by shutil's extract_archive
+- Samsung's `.tar.md5` archives
+- Nested archives
+- LG's `.kdz` archives
 
 ### Step 2 - What's inside the archive
--   A-only OTAs (Brotli and/or sdat compressed)
--   A/B OTAs
--   Dynamic partitions (super.img)
--   payload.bin
--   Raw images (e.g. Xiaomi fastboot packages)
--   Sparse images
--   LZ4 images
+
+- A-only OTAs (Brotli and/or sdat compressed)
+- A/B OTAs
+- Dynamic partitions (super.img)
+- payload.bin
+- Raw images (e.g. Xiaomi fastboot packages)
+- Sparse images
+- LZ4 images
 
 ### Step 3 - Partition images
--   Android boot images
--   7z supported archives/images
--   EROFS images using erofs-utils
+
+- Android boot images
+- 7z supported archives/images
+- EROFS images using erofs-utils
 
 ## Credits
--   AIK: osm0sis
--   [extract_android_ota_payload](https://github.com/erfanoabdi/extract_android_ota_payload): cyxx and erfanoabdi
--   sdat2img: xpirt
+
+- AIK: osm0sis
+- [extract_android_ota_payload](https://github.com/erfanoabdi/extract_android_ota_payload): cyxx and erfanoabdi
+- sdat2img: xpirt
 
 ## License
 
