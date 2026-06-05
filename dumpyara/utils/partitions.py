@@ -142,6 +142,7 @@ def fix_aliases(images_path: Path):
         if partition_path.exists():
             LOGI(f"Ignoring {alt_name} ({name} already extracted)")
             alt_path.unlink()
+            continue
 
         LOGI(f"Fixing alias {alt_name} -> {name}")
         move(alt_path, partition_path)
