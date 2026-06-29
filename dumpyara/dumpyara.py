@@ -77,7 +77,8 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
         # Create all_files.txt
         LOGI("Creating all_files.txt")
         (output_path / "all_files.txt").write_text(
-            "\n".join([str(file) for file in files_list]) + "\n"
+            "\n".join([str(file) for file in files_list]) + "\n",
+            encoding="utf-8"
         )
 
         return output_path
