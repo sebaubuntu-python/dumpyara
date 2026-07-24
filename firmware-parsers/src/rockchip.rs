@@ -94,10 +94,7 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
     // Validate AFP magic
     let afp_magic = &afp_header[0..4];
     if afp_magic != AFP_MAGIC_RKAF && afp_magic != AFP_MAGIC_RKAS {
-        bail!(
-            "not an AFP container: bad magic {:?}",
-            &afp_header[0..4]
-        );
+        bail!("not an AFP container: bad magic {:?}", &afp_header[0..4]);
     }
 
     // entry_count at offset 0x88 within AFP header

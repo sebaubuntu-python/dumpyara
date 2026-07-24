@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
+from importlib.util import find_spec
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGI
 from sebaubuntu_libs.libreorder import strcoll_files_key
@@ -14,12 +15,7 @@ from dumpyara.steps.extract_archive import extract_archive
 from dumpyara.steps.extract_images import extract_images
 from dumpyara.steps.prepare_images import prepare_images
 
-try:
-    import firmware_parsers
-
-    _HAS_FIRMWARE_PARSERS = True
-except ImportError:
-    _HAS_FIRMWARE_PARSERS = False
+_HAS_FIRMWARE_PARSERS = find_spec("firmware_parsers") is not None
 
 # Package name to package commands
 REQUIRED_TOOLS = {
@@ -77,8 +73,7 @@ def dumpyara(file: Path, output_path: Path, debug: bool = False):
         # Create all_files.txt
         LOGI("Creating all_files.txt")
         (output_path / "all_files.txt").write_text(
-            "\n".join([str(file) for file in files_list]) + "\n",
-            encoding="utf-8"
+            "\n".join([str(file) for file in files_list]) + "\n", encoding="utf-8"
         )
 
         return output_path

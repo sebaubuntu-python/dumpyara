@@ -9,15 +9,15 @@ import io
 from lz4.frame import LZ4FrameFile
 from pathlib import Path
 from sebaubuntu_libs.liblogging import LOGD, LOGI
-from shutil import copyfile, move
+from shutil import copyfile, move, which
 from subprocess import STDOUT, check_output
+
+SIMG2IMG_EXECUTABLE = which("simg2img") or "simg2img"
 
 try:
     import firmware_parsers
-
-    _HAS_FIRMWARE_PARSERS = True
 except ImportError:
-    _HAS_FIRMWARE_PARSERS = False
+    firmware_parsers = None
 
 
 def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
@@ -66,12 +66,12 @@ def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
             continue
 
         try:
-            if _HAS_FIRMWARE_PARSERS:
-                firmware_parsers.sparse_to_raw(
-                    str(image_path), str(unsparsed_image)
-                )
+            if firmware_parsers is not None:
+                firmware_parsers.sparse_to_raw(str(image_path), str(unsparsed_image))
             else:
-                check_output(["simg2img", image_path, unsparsed_image], stderr=STDOUT)
+                check_output(  # nosec B603
+                    [SIMG2IMG_EXECUTABLE, image_path, unsparsed_image], stderr=STDOUT
+                )
         except Exception:
             LOGD(f"Failed to unsparse {image_path.name}, should be a raw image")
             pass

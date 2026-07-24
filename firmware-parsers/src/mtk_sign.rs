@@ -26,7 +26,8 @@ fn strip_header(data: &[u8]) -> Result<(usize, usize)> {
     } else if data.len() > 0x4040
         && (data[0] == 0xBF && data[1] == 0xBF
             || data[0] == 0x88 && data[1] == 0x16  // known MTK header variant
-            || data[0..4] == [0x00, 0x00, 0x00, 0x00]) // null-padded MTK header
+            || data[0..4] == [0x00, 0x00, 0x00, 0x00])
+    // null-padded MTK header
     {
         // BFBF or known MTK header variants: skip first 0x4040 bytes
         let offset = 0x4040;
@@ -118,5 +119,8 @@ pub fn probe_zip(archive: &zip::ZipArchive<File>) -> bool {
 pub fn py_extract(input: &str, output_dir: &str) -> PyResult<Vec<String>> {
     let results = extract(Path::new(input), Path::new(output_dir))
         .map_err(|e| PyIOError::new_err(e.to_string()))?;
-    Ok(results.into_iter().map(|p| p.to_string_lossy().into_owned()).collect())
+    Ok(results
+        .into_iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect())
 }

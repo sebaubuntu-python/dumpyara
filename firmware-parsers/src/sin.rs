@@ -55,9 +55,7 @@ pub fn probe(data: &[u8]) -> bool {
     if data.len() < 4 {
         return false;
     }
-    &data[0..3] == b"SIN"
-        || &data[0..4] == b"SSSS"
-        || (data[0] == 0xBF && data[1] == 0xBF)
+    &data[0..3] == b"SIN" || &data[0..4] == b"SSSS" || (data[0] == 0xBF && data[1] == 0xBF)
 }
 
 /// Reassemble Sony sparse chunks into a raw image.
@@ -68,7 +66,10 @@ fn reassemble_sony_sparse(data: &[u8], output: &mut File) -> Result<()> {
     while pos + 12 <= data.len() {
         let chunk_type = u16::from_le_bytes(data[pos..pos + 2].try_into()?);
         // Validate chunk type
-        if !matches!(chunk_type, CAC_RAW | CAC_FILL | CAC_DONT_CARE | CAC_CRC | CAC_SKIP) {
+        if !matches!(
+            chunk_type,
+            CAC_RAW | CAC_FILL | CAC_DONT_CARE | CAC_CRC | CAC_SKIP
+        ) {
             // Not a Sony sparse chunk — treat remaining data as raw
             output.write_all(&data[pos..])?;
             break;
@@ -122,7 +123,10 @@ fn reassemble_sony_sparse(data: &[u8], output: &mut File) -> Result<()> {
 fn write_entry_data(entry_data: &[u8], output: &mut File) -> Result<()> {
     if entry_data.len() >= 2 {
         let first_u16 = u16::from_le_bytes(entry_data[0..2].try_into().unwrap_or([0, 0]));
-        if matches!(first_u16, CAC_RAW | CAC_FILL | CAC_DONT_CARE | CAC_CRC | CAC_SKIP) {
+        if matches!(
+            first_u16,
+            CAC_RAW | CAC_FILL | CAC_DONT_CARE | CAC_CRC | CAC_SKIP
+        ) {
             reassemble_sony_sparse(entry_data, output)?;
             return Ok(());
         }
@@ -332,8 +336,8 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
     match version {
         Some(SinVersion::V3) | Some(SinVersion::V4) => {
             // Scan header region for gzip magic, then stream from that offset
-            let gz_start = find_gzip_start(&header)
-                .context("no gzip data found in SIN v3/v4 header")?;
+            let gz_start =
+                find_gzip_start(&header).context("no gzip data found in SIN v3/v4 header")?;
             f.seek(SeekFrom::Start(gz_start as u64))?;
             let decoder = GzDecoder::new(BufReader::new(f));
             let mut archive = tar::Archive::new(decoder);
@@ -353,8 +357,8 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
         }
         Some(SinVersion::V5) => {
             // Scan header for tar "ustar" signature, then stream from that offset
-            let tar_start = find_tar_start(&header)
-                .context("no tar data found in SIN v5 header")?;
+            let tar_start =
+                find_tar_start(&header).context("no tar data found in SIN v5 header")?;
             f.seek(SeekFrom::Start(tar_start as u64))?;
             let mut archive = tar::Archive::new(BufReader::new(f));
             let mut out_file = File::create(&out_path)?;

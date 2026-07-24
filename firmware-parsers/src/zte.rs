@@ -158,10 +158,7 @@ fn extract_p_chunks(
 }
 
 /// Extract bin mode: rename *.bin → *.img
-fn extract_bin(
-    archive: &mut zip::ZipArchive<File>,
-    output_dir: &Path,
-) -> Result<Vec<PathBuf>> {
+fn extract_bin(archive: &mut zip::ZipArchive<File>, output_dir: &Path) -> Result<Vec<PathBuf>> {
     let mut extracted = Vec::new();
 
     // Collect indices first using name_for_index (avoids decompression)

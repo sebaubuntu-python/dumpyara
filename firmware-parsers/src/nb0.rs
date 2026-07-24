@@ -29,7 +29,10 @@ pub fn probe(data: &[u8], file_size: u64) -> bool {
     let min_required = 4 + ENTRY_SIZE;
     if data.len() >= min_required {
         let name_bytes = &data[4 + 16..4 + ENTRY_SIZE]; // filename field of first entry
-        let name_end = name_bytes.iter().position(|&b| b == 0).unwrap_or(name_bytes.len());
+        let name_end = name_bytes
+            .iter()
+            .position(|&b| b == 0)
+            .unwrap_or(name_bytes.len());
         if name_end == 0 {
             return false; // empty filename
         }
@@ -55,7 +58,10 @@ fn parse_entry(buf: &[u8; ENTRY_SIZE]) -> Result<Nb0Entry> {
     let data_size = u32::from_le_bytes(buf[4..8].try_into()?);
     // bytes 8..16 are unknown fields
     let name_bytes = &buf[16..64];
-    let name_end = name_bytes.iter().position(|&b| b == 0).unwrap_or(name_bytes.len());
+    let name_end = name_bytes
+        .iter()
+        .position(|&b| b == 0)
+        .unwrap_or(name_bytes.len());
     let filename = std::str::from_utf8(&name_bytes[..name_end])
         .context("invalid UTF-8 in NB0 entry filename")?
         .to_string();
@@ -136,5 +142,8 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
 pub fn py_extract(input: &str, output_dir: &str) -> PyResult<Vec<String>> {
     let results = extract(Path::new(input), Path::new(output_dir))
         .map_err(|e| PyIOError::new_err(e.to_string()))?;
-    Ok(results.into_iter().map(|p| p.to_string_lossy().into_owned()).collect())
+    Ok(results
+        .into_iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect())
 }

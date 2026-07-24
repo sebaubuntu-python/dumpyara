@@ -90,9 +90,9 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
         bail!("not a PAC v2 file: bad version string");
     }
 
-    let partition_count = u32::from_le_bytes(
-        header[PARTITION_COUNT_OFFSET..PARTITION_COUNT_OFFSET + 4].try_into()?,
-    ) as usize;
+    let partition_count =
+        u32::from_le_bytes(header[PARTITION_COUNT_OFFSET..PARTITION_COUNT_OFFSET + 4].try_into()?)
+            as usize;
     let partitions_list_start = u32::from_le_bytes(
         header[PARTITIONS_LIST_START_OFFSET..PARTITIONS_LIST_START_OFFSET + 4].try_into()?,
     ) as u64;
@@ -153,5 +153,8 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
 pub fn py_extract(input: &str, output_dir: &str) -> PyResult<Vec<String>> {
     let results = extract(Path::new(input), Path::new(output_dir))
         .map_err(|e| PyIOError::new_err(e.to_string()))?;
-    Ok(results.into_iter().map(|p| p.to_string_lossy().into_owned()).collect())
+    Ok(results
+        .into_iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect())
 }

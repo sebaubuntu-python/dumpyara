@@ -24,9 +24,7 @@ fn tar_bz2_contains_amlogic(path: &Path) -> bool {
             continue;
         }
         let mut magic = [0u8; 4];
-        if entry.read_exact(&mut magic).is_ok()
-            && u32::from_be_bytes(magic) == 0x27051956
-        {
+        if entry.read_exact(&mut magic).is_ok() && u32::from_be_bytes(magic) == 0x27051956 {
             return true;
         }
     }

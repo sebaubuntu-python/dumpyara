@@ -49,12 +49,8 @@ fn parse_rawprogram_xml(xml: &str) -> Result<Vec<Program>> {
                             prog.num_partition_sectors = val.parse().unwrap_or(0)
                         }
                         "start_sector" => prog.start_sector = val.parse().unwrap_or(0),
-                        "file_sector_offset" => {
-                            prog.file_sector_offset = val.parse().unwrap_or(0)
-                        }
-                        "SECTOR_SIZE_IN_BYTES" => {
-                            prog.sector_size = val.parse().unwrap_or(512)
-                        }
+                        "file_sector_offset" => prog.file_sector_offset = val.parse().unwrap_or(0),
+                        "SECTOR_SIZE_IN_BYTES" => prog.sector_size = val.parse().unwrap_or(512),
                         _ => {} // ignore unknown attributes
                     }
                 }
@@ -126,11 +122,10 @@ pub fn extract(input: &Path, output_dir: &Path) -> Result<Vec<PathBuf>> {
 
     // Find and parse rawprogram XML
     let rawprogram_xml = find_rawprogram_xml(&temp_dir)?;
-    let xml_content = fs::read_to_string(&rawprogram_xml)
-        .context("failed to read rawprogram XML")?;
+    let xml_content =
+        fs::read_to_string(&rawprogram_xml).context("failed to read rawprogram XML")?;
 
-    let programs = parse_rawprogram_xml(&xml_content)
-        .context("failed to parse rawprogram XML")?;
+    let programs = parse_rawprogram_xml(&xml_content).context("failed to parse rawprogram XML")?;
 
     // Group programs by label so that multi-chunk partitions (sparsechunk
     // entries listed as separate <program> elements with the same label)

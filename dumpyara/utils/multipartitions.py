@@ -8,17 +8,17 @@ from liblp.partition_tools.lpunpack import lpunpack
 from pathlib import Path
 from re import Pattern, compile
 from sebaubuntu_libs.liblogging import LOGI
-from shutil import move
+from shutil import move, which
 from subprocess import STDOUT, check_output
 
 from dumpyara.lib.libpayload import extract_android_ota_payload
 
+SIMG2IMG_EXECUTABLE = which("simg2img") or "simg2img"
+
 try:
     import firmware_parsers
-
-    _HAS_FIRMWARE_PARSERS = True
 except ImportError:
-    _HAS_FIRMWARE_PARSERS = False
+    firmware_parsers = None
 
 
 def extract_payload(image: Path, output_dir: Path):
@@ -29,10 +29,12 @@ def extract_super(image: Path, output_dir: Path):
     unsparsed_super = output_dir / "super.unsparsed.img"
 
     try:
-        if _HAS_FIRMWARE_PARSERS:
+        if firmware_parsers is not None:
             firmware_parsers.sparse_to_raw(str(image), str(unsparsed_super))
         else:
-            check_output(["simg2img", image, unsparsed_super], stderr=STDOUT)
+            check_output(  # nosec B603
+                [SIMG2IMG_EXECUTABLE, image, unsparsed_super], stderr=STDOUT
+            )
     except Exception:
         LOGI(f"Failed to unsparse {image.name}")
     else:
