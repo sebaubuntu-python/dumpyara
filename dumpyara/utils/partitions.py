@@ -98,12 +98,12 @@ def get_partition_name(partition_name: str):
     return ALTERNATIVE_PARTITION_NAMES.get(partition_name, partition_name)
 
 
-def get_partition_names():
+def get_partition_names() -> List[str]:
     """Get a list of partition names."""
     return list(PARTITIONS)
 
 
-def get_partition_names_with_alias():
+def get_partition_names_with_alias() -> List[str]:
     """Get a list of partition names with alias."""
     return get_partition_names() + list(ALTERNATIVE_PARTITION_NAMES)
 

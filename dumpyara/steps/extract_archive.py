@@ -17,6 +17,7 @@ from typing import Callable, Dict
 from zipfile import ZipFile, is_zipfile
 
 from dumpyara.utils.files import get_recursive_files_list
+from dumpyara.utils.partitions import get_partition_names_with_alias
 
 try:
     import firmware_parsers
@@ -172,6 +173,12 @@ def extract_archive(archive_path: Path, extracted_archive_path: Path, is_nested:
     LOGD(f"Extracted archive: {archive_path.name}")
 
 
+# Partition names, longest first so that e.g. "system_ext" wins over "system"
+# when the alternation is applied to a filename.
+_NESTED_ZIP_PARTITION_NAMES = "|".join(
+    re.escape(name) for name in sorted(get_partition_names_with_alias(), key=len, reverse=True)
+)
+
 NESTED_ZIP_PARTITION_MARKERS = (
     compile(
         r"(?:^|/)"
@@ -197,6 +204,17 @@ NESTED_ZIP_PARTITION_MARKERS = (
     ),
     compile(r"(?:^|/)payload\.bin$"),
     compile(r"(?:^|/)super(?!.*(_empty)).*\.img$"),
+    # Loose raw partition images, e.g. Pixel factory images ship system.img /
+    # vendor.img / product.img directly inside the nested image-*.zip with no
+    # super.img or payload.bin. Anchor on known partition names + optional A/B
+    # slot + the image suffixes get_raw_image() understands so an unrelated
+    # stray *.img elsewhere doesn't flag a zip as dumpable. super_empty.img is
+    # excluded structurally: "super" only matches when followed by a slot suffix
+    # or extension, never "_empty".
+    compile(
+        rf"(?:^|/)(?:{_NESTED_ZIP_PARTITION_NAMES})(?:_[ab])?"
+        r"(?:\.(?:bin|ext4|image|mbn)|\.img(?:\.ext4|\.lz4)?|\.raw(?:\.img)?)$"
+    ),
     compile(r"(?:^|/)[^/]+\.tar\.md5$"),
 )
 NESTED_ZIP_PATTERN = compile(r".*\.zip$")
