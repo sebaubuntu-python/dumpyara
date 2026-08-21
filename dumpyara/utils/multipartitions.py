@@ -3,17 +3,19 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
+from tempfile import mkdtemp
 from typing import Callable, Dict
 from liblp.partition_tools.lpunpack import lpunpack
 from pathlib import Path
 from re import Pattern, compile
 from sebaubuntu_libs.liblogging import LOGI
-from shutil import move, which
-from subprocess import STDOUT, check_output
+from shutil import move, rmtree, which
+from subprocess import STDOUT, check_output, run
 
 from dumpyara.lib.libpayload import extract_android_ota_payload
 
 SIMG2IMG_EXECUTABLE = which("simg2img") or "simg2img"
+OTADUMP_EXECUTABLE = which("otadump")
 
 try:
     import firmware_parsers
@@ -21,8 +23,28 @@ except ImportError:
     firmware_parsers = None
 
 
+def _extract_payload_otadump(image: Path, output_dir: Path, otadump_bin: str):
+    # Stage into a sibling tempdir so a partial failure does not leave half-written
+    # images in output_dir alongside the real payload.bin. Move results across on success.
+    staging = Path(mkdtemp(prefix=".otadump-", dir=output_dir))
+    try:
+        run(  # nosec B603
+            [otadump_bin, "--output-dir", str(staging), str(image)],
+            check=True,
+        )
+        for img in staging.iterdir():
+            move(str(img), str(output_dir / img.name))
+    finally:
+        rmtree(staging, ignore_errors=True)
+
+
 def extract_payload(image: Path, output_dir: Path):
-    extract_android_ota_payload(image, output_dir)
+    if OTADUMP_EXECUTABLE:
+        LOGI(f"Extracting {image.name} with otadump ({OTADUMP_EXECUTABLE})")
+        _extract_payload_otadump(image, output_dir, OTADUMP_EXECUTABLE)
+    else:
+        LOGI(f"Extracting {image.name} with vendored Python payload parser")
+        extract_android_ota_payload(image, output_dir)
 
 
 def extract_super(image: Path, output_dir: Path):
