@@ -13,29 +13,40 @@ from shutil import copyfile, move
 from subprocess import STDOUT, check_output
 
 
+RAW_IMAGE_SUFFIXES = (
+    "",
+    ".bin",
+    ".ext4",
+    ".image",
+    ".img",
+    ".img.ext4",
+    ".mbn",
+    ".raw",
+    ".raw.img",
+)
+RAW_IMAGE_LZ4_SUFFIX = ".img.lz4"
+RAW_IMAGE_DAT_SUFFIX = ".new.dat"
+RAW_IMAGE_BROTLI_SUFFIX = ".new.dat.br"
+RAW_IMAGE_DATA_SUFFIXES = (
+    RAW_IMAGE_DAT_SUFFIX,
+    RAW_IMAGE_BROTLI_SUFFIX,
+)
+RAW_IMAGE_TRANSFER_LIST_SUFFIX = ".transfer.list"
+
+
 def get_raw_image(partition: str, files_path: Path, output_image_path: Path):
     """
     Convert a partition image to a raw image.
 
     This function handles brotli compression, sdat and sparse images.
     """
-    brotli_image = files_path / f"{partition}.new.dat.br"
-    dat_image = files_path / f"{partition}.new.dat"
-    transfer_list = files_path / f"{partition}.transfer.list"
-    lz4_image = files_path / f"{partition}.img.lz4"
+    brotli_image = files_path / f"{partition}{RAW_IMAGE_BROTLI_SUFFIX}"
+    dat_image = files_path / f"{partition}{RAW_IMAGE_DAT_SUFFIX}"
+    transfer_list = files_path / f"{partition}{RAW_IMAGE_TRANSFER_LIST_SUFFIX}"
+    lz4_image = files_path / f"{partition}{RAW_IMAGE_LZ4_SUFFIX}"
     raw_image = files_path / f"{partition}.img"
     unsparsed_image = files_path / f"{partition}.unsparsed.img"
-    possible_image_names = [
-        f"{partition}",
-        f"{partition}.bin",
-        f"{partition}.ext4",
-        f"{partition}.image",
-        f"{partition}.img",
-        f"{partition}.img.ext4",
-        f"{partition}.mbn",
-        f"{partition}.raw",
-        f"{partition}.raw.img",
-    ]
+    possible_image_names = [f"{partition}{suffix}" for suffix in RAW_IMAGE_SUFFIXES]
 
     if brotli_image.is_file():
         LOGI(f"Decompressing {brotli_image.name} as brotli image")
