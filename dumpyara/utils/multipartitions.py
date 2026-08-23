@@ -18,6 +18,11 @@ SIMG2IMG_EXECUTABLE = which("simg2img") or "simg2img"
 OTADUMP_EXECUTABLE = which("otadump")
 
 try:
+    from otadump import extract as extract_payload_native
+except ImportError:
+    extract_payload_native = None
+
+try:
     import firmware_parsers
 except ImportError:
     firmware_parsers = None
@@ -39,7 +44,10 @@ def _extract_payload_otadump(image: Path, output_dir: Path, otadump_bin: str):
 
 
 def extract_payload(image: Path, output_dir: Path):
-    if OTADUMP_EXECUTABLE:
+    if extract_payload_native is not None:
+        LOGI(f"Extracting {image.name} with native otadump bindings")
+        extract_payload_native(image, output_dir, overwrite=True)
+    elif OTADUMP_EXECUTABLE:
         LOGI(f"Extracting {image.name} with otadump ({OTADUMP_EXECUTABLE})")
         _extract_payload_otadump(image, output_dir, OTADUMP_EXECUTABLE)
     else:
