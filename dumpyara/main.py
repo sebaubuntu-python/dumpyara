@@ -33,7 +33,7 @@ def main():
 
     output = Path.cwd() / args.file.stem
     if args.output:
-        output = args.output
+        output = args.output.resolve()
 
     output_path = dumpyara(args.file, output, args.debug)
 
