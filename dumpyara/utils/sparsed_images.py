@@ -9,6 +9,11 @@ from subprocess import STDOUT, check_output
 
 from dumpyara.utils.partitions import get_partition_names_with_alias
 
+try:
+    import firmware_parsers
+except ImportError:
+    firmware_parsers = None
+
 
 def prepare_sparsed_images(files_path: Path):
     """
@@ -31,6 +36,12 @@ def prepare_sparsed_images(files_path: Path):
         if sparsechunk_image_files:
             LOGI(f"Preparing sparsechunk images for {partition}")
             LOGI(f"Converting {sparsechunk_image_files[0]} to {output_image.name}")
-            check_output(["simg2img", *sparsechunk_image_files, output_image], stderr=STDOUT)
+            if firmware_parsers is not None:
+                firmware_parsers.sparse_chunks_to_raw(
+                    [str(file) for file in sparsechunk_image_files],
+                    str(output_image),
+                )
+            else:
+                check_output(["simg2img", *sparsechunk_image_files, output_image], stderr=STDOUT)
             for sparsechunk_image_file in sparsechunk_image_files:
                 sparsechunk_image_file.unlink()

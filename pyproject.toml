@@ -33,8 +33,12 @@ build-backend = "poetry.core.masonry.api"
 line-length = 100
 exclude = ["dumpyara/lib/libpayload/update_metadata_pb2.py"]
 
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
 [tool.ruff.format]
 docstring-code-format = true
 
 [tool.pyright]
 ignore = ["dumpyara/lib/libpayload/__init__.py", "dumpyara/lib/libpayload/update_metadata_pb2.py"]
+stubPath = "typings"
