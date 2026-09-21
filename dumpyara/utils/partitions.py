@@ -55,6 +55,7 @@ PARTITIONS = {
     "factory": FILESYSTEM,
     "india": FILESYSTEM,
     "mi_ext": FILESYSTEM,
+    "mi_product": FILESYSTEM,
     "modem": FILESYSTEM,
     "my_bigball": FILESYSTEM,
     "my_carrier": FILESYSTEM,
@@ -98,12 +99,12 @@ def get_partition_name(partition_name: str):
     return ALTERNATIVE_PARTITION_NAMES.get(partition_name, partition_name)
 
 
-def get_partition_names():
+def get_partition_names() -> List[str]:
     """Get a list of partition names."""
     return list(PARTITIONS)
 
 
-def get_partition_names_with_alias():
+def get_partition_names_with_alias() -> List[str]:
     """Get a list of partition names with alias."""
     return get_partition_names() + list(ALTERNATIVE_PARTITION_NAMES)
 
@@ -133,18 +134,23 @@ def prepare_raw_images(files_path: Path, raw_images_path: Path):
 def fix_aliases(images_path: Path):
     """Move aliased partitions to their generic name."""
     for alt_name, name in ALTERNATIVE_PARTITION_NAMES.items():
-        alt_path = images_path / f"{alt_name}.img"
+        alt_paths = [
+            images_path / f"{alt_name}.img",
+            images_path / f"{alt_name}.bin",
+        ]
         partition_path = images_path / f"{name}.img"
 
-        if not alt_path.exists():
-            continue
+        for alt_path in alt_paths:
+            if not alt_path.exists():
+                continue
 
-        if partition_path.exists():
-            LOGI(f"Ignoring {alt_name} ({name} already extracted)")
-            alt_path.unlink()
+            if partition_path.exists():
+                LOGI(f"Ignoring {alt_name} ({name} already extracted)")
+                alt_path.unlink()
+                continue
 
-        LOGI(f"Fixing alias {alt_name} -> {name}")
-        move(alt_path, partition_path)
+            LOGI(f"Fixing alias {alt_name} -> {name}")
+            move(alt_path, partition_path)
 
 
 def get_filename_suffixes(file: Path):

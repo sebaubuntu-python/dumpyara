@@ -5,6 +5,23 @@
 
 Requires Python 3.9 or greater
 
+## Requirements
+
+Besides Python, the following tools must be available in `PATH`:
+
+- [7-zip](https://www.7-zip.org/) (`7zz`) or p7zip (`7z`)
+- [erofs-utils](https://github.com/erofs/erofs-utils) **1.8 or greater** (`fsck.erofs`)
+- [e2fsprogs](https://e2fsprogs.sourceforge.net/) (`debugfs`)
+- `simg2img`, from android-sdk-libsparse-utils or platform-utils, unless
+  `firmware_parsers` is installed
+
+erofs-utils older than 1.8 must not be used: `fsck.erofs --extract` silently
+drops holes in chunk-based files, producing truncated output while still
+exiting 0, so corrupt dumps are published without any error. This was fixed
+upstream in [`b063ea3`](https://github.com/erofs/erofs-utils/commit/b063ea316aa9fde2e878d7cbc7892dd9820d3bf7),
+first released in 1.8. Distro packages are often far older than that, so
+check `fsck.erofs -V` rather than assuming.
+
 ## Installation
 
 ```sh
@@ -40,7 +57,8 @@ python -m dumpyara <path to OTA file>
 
 - Android boot images
 - 7z supported archives/images
-- EROFS images using erofs-utils
+- EROFS images using erofs-utils (1.8 or greater)
+- ext4 images using debugfs, which preserves symlinks that 7z rewrites
 
 ## Credits
 
