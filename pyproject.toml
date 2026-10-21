@@ -3,31 +3,33 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-[tool.poetry]
+[project]
 name = "dumpyara"
 version = "1.1.0"
 description = "Android firmware extractor"
-authors = ["Sebastiano Barezzi <seba@sebaubuntu.dev>"]
+authors = [{ name = "Sebastiano Barezzi", email = "seba@sebaubuntu.dev" }]
 license = "GPL-3.0-or-later"
 readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "brotli>=1.0.9,<2",
+    "protobuf>=4.22.1,<8",
+    "sebaubuntu-libs>=2.0.0,<3",
+    "liblp>=1.0.2,<2",
+    "py7zr>=1.0.0,<2",
+    "lz4>=4.3.3,<5",
+    "zstandard>=0.23,<0.26",
+]
+
+[project.urls]
 repository = "https://github.com/sebaubuntu-python/dumpyara"
 
-[tool.poetry.scripts]
-dumpyara = 'dumpyara.main:main'
-
-[tool.poetry.dependencies]
-python = "^3.9"
-Brotli = "^1.0.9"
-protobuf = ">=4.22.1,<7.0.0"
-sebaubuntu-libs = "^2.0.0"
-liblp = "^1.0.2"
-py7zr = "^1.0.0"
-lz4 = "^4.3.3"
-zstandard = ">=0.23,<0.26"
+[project.scripts]
+dumpyara = "dumpyara.main:main"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 100

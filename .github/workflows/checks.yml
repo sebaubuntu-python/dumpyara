@@ -37,22 +37,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Poetry
-        shell: bash
-        run: pipx install poetry
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
         with:
-          cache: 'poetry'
+          enable-cache: true
 
       - name: Install dependencies
         shell: bash
-        run: poetry install
+        run: uv sync --locked
 
-      - name: Add Poetry to PATH
+      - name: Add venv to PATH
         shell: bash
-        run: echo "$(poetry env info --path)/bin" >> $GITHUB_PATH
+        run: echo "$PWD/.venv/bin" >> $GITHUB_PATH
 
       - name: pyright
         uses: jakebailey/pyright-action@v2

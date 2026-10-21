@@ -9,7 +9,7 @@ SPDX-PackageSupplier = "Dumpyara Project"
 SPDX-PackageDownloadLocation = "https://github.com/sebaubuntu-python/dumpyara"
 
 [[annotations]]
-path = ["poetry.lock"]
+path = ["uv.lock"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "Dumpyara Project"
 SPDX-License-Identifier = "GPL-3.0-or-later"
