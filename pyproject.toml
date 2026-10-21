@@ -19,7 +19,11 @@ dependencies = [
     "py7zr>=1.0.0,<2",
     "lz4>=4.3.3,<5",
     "zstandard>=0.23,<0.26",
+    "otadump @ git+https://github.com/AndroidDumps/otadump@ca867b2f587eb5cb56413fe81f53dcfa61423758",
 ]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [project.urls]
 repository = "https://github.com/sebaubuntu-python/dumpyara"
