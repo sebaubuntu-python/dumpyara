@@ -83,6 +83,7 @@ PARTITIONS = {
     "special_preload": FILESYSTEM,
     "systemex": FILESYSTEM,
     "xrom": FILESYSTEM,
+    "userdata_exp.ai": FILESYSTEM,
 }
 
 # alternative name: generic name
